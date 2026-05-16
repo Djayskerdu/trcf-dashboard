@@ -48,6 +48,12 @@ const subscriptionId = subscription.id;
 console.log("SUB ID:", subscriptionId);
 
 console.log("OPTED IN:", subscription.optedIn);
+console.log("TOKEN:", subscription.token);
+
+console.log(
+  "PERMISSION:",
+  await OneSignal.Notifications.permission
+);
 
 if (!subscription.optedIn) {
   console.log("❌ User not subscribed");
