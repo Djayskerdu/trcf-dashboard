@@ -8,6 +8,11 @@ export default function OneSignalClient() {
   window.matchMedia("(display-mode: standalone)").matches ||
   window.navigator.standalone === true;
 
+  console.log(
+  "IS STANDALONE:",
+  isStandalone
+)
+
 if (!isStandalone) return;
 
    // if (!isStandalone) return;
