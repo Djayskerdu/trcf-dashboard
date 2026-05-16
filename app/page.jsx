@@ -97,21 +97,21 @@ const [isLeader, setIsLeader] = useState(false)
     fetchData()
   }, [])
 
-  useEffect(() => {
+useEffect(() => {
   if (!users.length) return
 
-  const storedId = localStorage.getItem("currentUser")
+  const roleColumnIndex = 2 // Role column
 
-  const me = users.find(u =>
-  u[0]?.toLowerCase().trim() === storedId?.toLowerCase().trim()
-)
+  const hasLeader = users
+    .slice(1)
+    .some(u =>
+      (u[roleColumnIndex] || "")
+        .toString()
+        .trim()
+        .toLowerCase() === "leader"
+    )
 
-
- if (me && me[2]?.toString().trim().toLowerCase() === "leader") {
-  setIsLeader(true)
-} else {
-  setIsLeader(false)
-}
+  setIsLeader(hasLeader)
 }, [users])
 
 useEffect(() => {
