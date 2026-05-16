@@ -39,7 +39,22 @@ export default function OneSignalClient() {
           return;
         }
 
-        console.log("✅ OneSignal ID:", subscriptionId);
+        console.log("🔔 Permission:", OneSignal.Notifications.permission);
+
+console.log(
+  "📱 Push Subscription:",
+  OneSignal.User.PushSubscription
+);
+
+console.log(
+  "🆔 Subscription ID:",
+  OneSignal.User?.PushSubscription?.id
+);
+
+console.log(
+  "📌 Opted In:",
+  OneSignal.User?.PushSubscription?.optedIn
+);
 
         const ua = navigator.userAgent;
 
