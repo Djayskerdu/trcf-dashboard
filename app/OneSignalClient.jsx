@@ -48,7 +48,23 @@ const subscriptionId = subscription.id;
 console.log("SUB ID:", subscriptionId);
 
 console.log("OPTED IN:", subscription.optedIn);
+
 console.log("TOKEN:", subscription.token);
+
+console.log(
+  "PERMISSION:",
+  await OneSignal.Notifications.permission
+);
+
+console.log(
+  "SUPPORTED:",
+  OneSignal.Notifications.isPushSupported()
+);
+
+console.log(
+  "IS IOS:",
+  /iPhone|iPad|iPod/i.test(navigator.userAgent)
+);
 
 console.log(
   "PERMISSION:",
