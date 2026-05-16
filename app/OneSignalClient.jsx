@@ -5,10 +5,12 @@ import { useEffect } from "react";
 export default function OneSignalClient() {
   useEffect(() => {
     const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true;
+  window.matchMedia("(display-mode: standalone)").matches ||
+  window.navigator.standalone === true;
 
-    if (!isStandalone) return;
+if (!isStandalone) return;
+
+   // if (!isStandalone) return;
 
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
