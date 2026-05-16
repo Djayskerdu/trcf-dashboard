@@ -25,7 +25,7 @@ import {
 } from 'recharts'
 
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbyxB-WryGyT8XO3zT1tI7yswkhCYAVgu9ZNACvHykUMidllQbTW-RkF0N7UlmgZJD4/exec'
+  'https://script.google.com/macros/s/AKfycbwVqkiZV-GeRhgVRiE6l5S5fTeJ1F0TvYpNhEZhwWBrxUL7poEi8Yioy57dSRLDmr1x/exec'
 
 const getDeviceInfo = () => {
 
