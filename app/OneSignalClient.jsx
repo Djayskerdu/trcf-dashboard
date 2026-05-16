@@ -40,30 +40,21 @@ if (currentUser) {
 
       // WAIT FOR SUBSCRIPTION ID PROPERLY
       setTimeout(async () => {
-        const subscriptionId =
-          OneSignal.User?.PushSubscription?.id;
+        const subscription =
+  OneSignal.User.PushSubscription;
 
-        if (!subscriptionId) {
-          console.log("❌ No OneSignal ID yet");
-          return;
-        }
+console.log("FULL SUBSCRIPTION:", subscription);
 
-        console.log("🔔 Permission:", OneSignal.Notifications.permission);
+const subscriptionId = subscription.id;
 
-console.log(
-  "📱 Push Subscription:",
-  OneSignal.User.PushSubscription
-);
+console.log("SUB ID:", subscriptionId);
 
-console.log(
-  "🆔 Subscription ID:",
-  OneSignal.User?.PushSubscription?.id
-);
+console.log("OPTED IN:", subscription.optedIn);
 
-console.log(
-  "📌 Opted In:",
-  OneSignal.User?.PushSubscription?.optedIn
-);
+if (!subscription.optedIn) {
+  console.log("❌ User not subscribed");
+  return;
+}
 
         const ua = navigator.userAgent;
 
