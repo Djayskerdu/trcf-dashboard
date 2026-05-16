@@ -16,10 +16,17 @@ if (!isStandalone) return;
 
     window.OneSignalDeferred.push(async function (OneSignal) {
       await OneSignal.init({
-        appId: "cbb7fa9d-bdb7-4c90-ad23-8afffe745bbb",
-        notifyButton: { enable: false },
-        allowLocalhostAsSecureOrigin: true,
-      });
+  appId: "cbb7fa9d-bdb7-4c90-ad23-8afffe745bbb",
+  notifyButton: { enable: false },
+  allowLocalhostAsSecureOrigin: true,
+});
+
+const currentUser =
+  localStorage.getItem("currentUser");
+
+if (currentUser) {
+  await OneSignal.login(currentUser);
+}
 
       // ALWAYS REQUEST PERMISSION PROPERLY
       const permission = await OneSignal.Notifications.permission;
