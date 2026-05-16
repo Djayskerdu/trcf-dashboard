@@ -1753,20 +1753,33 @@ const sol3 =
         <br />
 
         <button
-          className="reset-btn"
-          onClick={async () => {
+  className="reset-btn"
+  onClick={async () => {
+    console.log("BUTTON CLICKED")
 
-            const ids = selectedUsers.join(',')
+    console.log("selectedUsers:", selectedUsers)
 
-            await fetch(
-              `${API_URL}?action=notify&ids=${ids}`
-            )
+    const ids = selectedUsers.join(",")
 
-            alert("Notifications sent!")
-          }}
-        >
-          Send Reminder
-        </button>
+    const url = `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
+
+    console.log("REQUEST URL:", url)
+
+    try {
+      const res = await fetch(url)
+      const text = await res.text()
+
+      console.log("SERVER RESPONSE:", text)
+
+      alert("Notifications sent!")
+    } catch (err) {
+      console.error("ERROR SENDING NOTIFICATION:", err)
+      alert("Failed to send notification")
+    }
+  }}
+>
+  Send Reminder
+</button>
 
       </>
     )}
