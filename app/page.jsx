@@ -106,20 +106,48 @@ const [isLeader, setIsLeader] = useState(false)
   }, [])
 
 useEffect(() => {
+
   if (!users.length) return
 
-  const roleColumnIndex = 2 // Role column
+  async function checkLeader() {
 
-  const hasLeader = users
-    .slice(1)
-    .some(u =>
-      (u[roleColumnIndex] || "")
+    if (!window.OneSignal) return
+
+    const subId =
+      window.OneSignal?.User
+        ?.PushSubscription?.id
+
+    console.log("CURRENT DEVICE ID:", subId)
+
+    if (!subId) {
+      setIsLeader(false)
+      return
+    }
+
+    const foundUser = users
+      .slice(1)
+      .find(u => u[3] === subId)
+
+    console.log("FOUND USER:", foundUser)
+
+    if (!foundUser) {
+      setIsLeader(false)
+      return
+    }
+
+    const role =
+      (foundUser[2] || "")
         .toString()
         .trim()
-        .toLowerCase() === "leader"
-    )
+        .toLowerCase()
 
-  setIsLeader(hasLeader)
+    console.log("ROLE:", role)
+
+    setIsLeader(role === "leader")
+  }
+
+  checkLeader()
+
 }, [users])
 
 useEffect(() => {
