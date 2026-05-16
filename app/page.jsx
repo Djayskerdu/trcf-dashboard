@@ -60,6 +60,14 @@ const getDeviceInfo = () => {
 export default function Page() {
   const [currentUser, setCurrentUser] =
   useState('')
+  useEffect(() => {
+  const saved =
+    localStorage.getItem("currentUser")
+
+  if (saved) {
+    setCurrentUser(saved)
+  }
+}, [])
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [installPrompt, setInstallPrompt] =

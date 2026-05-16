@@ -21,13 +21,6 @@ if (!isStandalone) return;
   allowLocalhostAsSecureOrigin: true,
 });
 
-const currentUser =
-  localStorage.getItem("currentUser");
-
-if (currentUser) {
-  await OneSignal.login(currentUser);
-}
-
       // ALWAYS REQUEST PERMISSION PROPERLY
       const permission = await OneSignal.Notifications.permission;
 
