@@ -1186,14 +1186,13 @@ if (
                 return (
 
                   <div
-                    className="leader-card clickable"
-                    key={i}
                     onClick={() =>
-                      setSelectedLeader({
-                        name: l[1],
-                        members,
-                      })
-                    }
+  setSelectedLeader({
+    name: l[1],
+    members,
+    leaderData: l,
+  })
+}
                   >
 
                     <div className="leader-avatar">
@@ -1442,13 +1441,57 @@ const sol3 =
 
               <div className="popup-member-top">
 
-                <span>
-                  {i + 1}.
-                </span>
+  <span>
+    {index + 1}.
+  </span>
 
-                <h4>{p[1]}</h4>
+  <h4
+    style={{
+      cursor: closecell.includes(memberName)
+        ? 'pointer'
+        : 'default',
 
-              </div>
+      color: closecell.includes(memberName)
+        ? '#60a5fa'
+        : 'white',
+
+      textDecoration: closecell.includes(memberName)
+        ? 'underline'
+        : 'none',
+    }}
+
+    onClick={() => {
+
+      if (!closecell.includes(memberName))
+        return
+
+      const childLeader =
+        leaders.find(
+          (x) =>
+            x[1]
+              ?.toLowerCase()
+              .trim() === memberName
+        )
+
+      if (!childLeader) return
+
+      const childMembers =
+        childLeader[3]
+          ?.split(',')
+          .map((m) => m.trim())
+          .filter(Boolean) || []
+
+      setSelectedLeader({
+        name: childLeader[1],
+        members: childMembers,
+        leaderData: childLeader,
+      })
+    }}
+  >
+    {member}
+  </h4>
+
+</div>
 
               <div className="followup-body">
 
