@@ -304,10 +304,18 @@ const [scannerError, setScannerError] =
 scanner.render(
 
   async (decodedText) => {
+  if (isProcessing) return
+  isProcessing = true
 
-    console.log("SCANNED QR:", decodedText)
+  console.log("SCANNED QR:", decodedText)
 
-   let memberId = decodedText
+  let memberId = decodedText
+  // ... your existing logic
+
+  setTimeout(() => {
+    isProcessing = false
+  }, 2000) // ⬅ 2s cooldown before next scan
+
 
 if (decodedText.startsWith('TRCF_MEMBER:')) {
 
