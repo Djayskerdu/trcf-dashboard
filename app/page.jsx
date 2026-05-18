@@ -2,7 +2,12 @@
 
 import axios from 'axios'
 import { Html5QrcodeScanner } from 'html5-qrcode'
-import { useEffect, useMemo, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useRef
+} from 'react'
 
 import {
   Home,
@@ -280,6 +285,8 @@ const [scanResult, setScanResult] =
 const [scannerError, setScannerError] =
   useState('')
 
+  const lastScanRef = useRef(0)
+
   useEffect(() => {
 
   if (activeTab !== 'QR Scan') return
@@ -303,21 +310,18 @@ const scanner =
 
 let lastScan = 0
 
+
 scanner.render(
 
   async (decodedText) => {
 
-    /* =========================
-       SCAN COOLDOWN
-    ========================= */
-
     const now = Date.now()
 
-    if (now - lastScan < 2000) {
+    if (now - lastScanRef.current < 3000) {
       return
     }
 
-    lastScan = now
+    lastScanRef.current = now
 
     console.log("SCANNED QR:", decodedText)
 
