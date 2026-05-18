@@ -291,36 +291,47 @@ const [scannerError, setScannerError] =
 
   if (!isInstalled) return
 
-  const scanner =
-    new Html5QrcodeScanner(
-      'reader',
-      {
-        fps: 5,
-        qrbox: 250,
-      },
-      false
-    )
+const scanner =
+  new Html5QrcodeScanner(
+    'reader',
+    {
+      fps: 3,
+      qrbox: 250,
+    },
+    false
+  )
+
+let lastScan = 0
 
 scanner.render(
 
   async (decodedText) => {
 
+    /* =========================
+       SCAN COOLDOWN
+    ========================= */
+
+    const now = Date.now()
+
+    if (now - lastScan < 2000) {
+      return
+    }
+
+    lastScan = now
+
     console.log("SCANNED QR:", decodedText)
 
-   let memberId = decodedText
+    let memberId = decodedText
 
-   if (isScanning) return
+    if (decodedText.startsWith('TRCF_MEMBER:')) {
 
-  
-if (decodedText.startsWith('TRCF_MEMBER:')) {
+      memberId =
+        decodedText.replace(
+          'TRCF_MEMBER:',
+          ''
+        )
 
-  memberId =
-    decodedText.replace(
-      'TRCF_MEMBER:',
-      ''
-    )
-
-}
+    }
 
     /* =========================
        EXTRACT MEMBER ID
@@ -346,7 +357,10 @@ if (decodedText.startsWith('TRCF_MEMBER:')) {
         .toString()
         .trim()
 
-    console.log("EXTRACTED MEMBER ID:", memberId)
+    console.log(
+      "EXTRACTED MEMBER ID:",
+      memberId
+    )
 
     /* =========================
        FIND MEMBER
@@ -368,7 +382,10 @@ if (decodedText.startsWith('TRCF_MEMBER:')) {
 
         })
 
-    console.log("FOUND MEMBER:", foundMember)
+    console.log(
+      "FOUND MEMBER:",
+      foundMember
+    )
 
     if (foundMember) {
 
@@ -379,11 +396,11 @@ if (decodedText.startsWith('TRCF_MEMBER:')) {
       try {
 
         await fetch(
-  `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`,
-  {
-    method: 'GET',
-  }
-)
+          `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`,
+          {
+            method: 'GET',
+          }
+        )
 
       } catch (err) {
 
@@ -418,15 +435,14 @@ if (decodedText.startsWith('TRCF_MEMBER:')) {
       setScannerError(
         `Member not found: ${memberId}`
       )
+
     }
-    setTimeout(() => {
-      isScanning = false
-    }, 2000)
+
   },
 
   () => {}
-)
 
+)
 
   return () => {
     scanner.clear().catch(() => {})
