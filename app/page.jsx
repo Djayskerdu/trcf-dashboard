@@ -313,7 +313,16 @@ const playBeep = () => {
   const audio = new Audio(
     "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
   )
-  audio.play().catch(() => {})
+  audio.volume = 1
+
+  audio
+    .play()
+    .then(() => {
+      console.log("BEEP PLAYED")
+    })
+    .catch((err) => {
+      console.log("AUDIO BLOCKED:", err)
+    })
 }
 
 scanner.render(
@@ -356,7 +365,9 @@ scanner.render(
 
       playBeep()
 
-      scannerRef.current?.pause?.()
+     setTimeout(() => {
+  isScanningRef.current = false
+}, 1500)
 
       setScanResult({
         MemberID: foundMember[0],
@@ -2421,6 +2432,7 @@ underRaw
 
 {/* QR SCANNER */}
 {activeTab === 'QR Scan' && (
+  
 
   <div className="glass panel">
 
@@ -2430,11 +2442,25 @@ underRaw
       Scan TRCF Member QR Code
     </p>
 
+    <button
+  style={{ display: 'none' }}
+  onClick={() => {
+    const audio = new Audio(
+      "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+    )
+    audio.play()
+  }}
+>
+  unlock sound
+</button>
+
     {!window.matchMedia('(display-mode: standalone)').matches ? (
 
       <div className="scanner-warning">
         ⚠ Install the app first to use scanner.
       </div>
+
+      
 
     ) : (
 
@@ -2481,16 +2507,7 @@ underRaw
             {scannerError}
           </p>
         )}
-        <button
-  className="reset-btn"
-  onClick={() => {
-    scannerRef.current?.resume?.()
-    setScanResult(null)
-    setScannerError('')
-  }}
->
-  Scan Next Member 🔁
-</button>
+ className="reset-btn"
 
       </>
 
