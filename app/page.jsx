@@ -74,30 +74,40 @@ export default function Page() {
 }, [])
 
 const handleSendFirstTimersBulk = async () => {
+
   try {
-    const list = followup.slice(1)
 
-    const payload = list.map(f => ({
-      name: f[1],
-      email: f[8],
-      id: f[9],
-    }))
+    const url =
+      `${API_URL}?action=sendFirstTimersBulk&date=${startDate}`
 
-    const res = await fetch(
-      `${API_URL}?action=sendFirstTimersBulk`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    )
+    console.log("SENDING TO:", url)
 
-    alert("✅ Bulk Welcome QR sent!")
+    const res = await fetch(url, {
+      method: 'GET',
+    })
+
+    const data = await res.json()
+
+    console.log(data)
+
+    if (data.success) {
+
+      alert(
+        `✅ Welcome QR sent to ${data.total} people`
+      )
+
+    } else {
+
+      alert("❌ Failed to send")
+    }
+
   } catch (err) {
+
     console.error(err)
-    alert("❌ Failed to send bulk QR")
+
+    alert(
+      "❌ " + err.message
+    )
   }
 }
 
