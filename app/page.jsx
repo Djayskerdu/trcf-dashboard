@@ -243,92 +243,115 @@ const [scannerError, setScannerError] =
       false
     )
 
-  scanner.render(
+scanner.render(
 
-    (decodedText) => {
+  async (decodedText) => {
 
-      const foundMember =
-        members
-          .slice(1)
-          .find(
-            (m) =>
-              m[0]
-  ?.toString()
-  .trim()
-  .toLowerCase() ===
-decodedText
-  .trim()
-  .toLowerCase()
+    console.log("SCANNED QR:", decodedText)
+
+    let memberId = decodedText
+
+    /* =========================
+       EXTRACT MEMBER ID
+    ========================= */
+
+    try {
+
+      if (decodedText.includes('action=scan')) {
+
+        const url = new URL(decodedText)
+
+        memberId =
+          url.searchParams.get('id') || ''
+
+      }
+
+    } catch (err) {
+      console.log(err)
+    }
+
+    memberId =
+      memberId
+        .toString()
+        .trim()
+
+    console.log("EXTRACTED MEMBER ID:", memberId)
+
+    /* =========================
+       FIND MEMBER
+    ========================= */
+
+    const foundMember =
+      members
+        .slice(1)
+        .find((m) => {
+
+          return (
+            m[0]
+              ?.toString()
+              .trim()
+              .toLowerCase() ===
+            memberId
+              .toLowerCase()
           )
 
-      if (foundMember) {
+        })
 
-  fetch(API_URL, {
+    console.log("FOUND MEMBER:", foundMember)
 
-    method: 'POST',
+    if (foundMember) {
 
-    mode: 'no-cors',
+      /* =========================
+         SAVE TO ATTENDANCE
+      ========================= */
 
-    headers: {
-      'Content-Type': 'application/json',
-    },
+      try {
 
-    body: JSON.stringify({
-
-      action: 'attendance',
-
-      date: new Date().toISOString(),
-
-      theme: '',
-
-      fullName: foundMember[1],
-
-      age: foundMember[2],
-
-      gender: foundMember[3],
-
-      firstTimer: foundMember[4],
-
-      contact: foundMember[5],
-
-      lgLeader: foundMember[6],
-
-    }),
-
-  })
-
-  setScanResult({
-
-    MemberID: foundMember[0],
-
-    FullName: foundMember[1],
-
-    Age: foundMember[2],
-
-    Gender: foundMember[3],
-
-    FirstTimer: foundMember[4],
-
-    Contact: foundMember[5],
-
-    LGLeader: foundMember[6],
-
-  })
-
-  setScannerError('')
-
-} else {
-
-        setScanResult(null)
-
-        setScannerError(
-          'Member not found.'
+        await fetch(
+          `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}`,
+          {
+            method: 'GET',
+          }
         )
-      }
-    },
 
-    () => {}
-  )
+      } catch (err) {
+
+        console.log(err)
+
+      }
+
+      setScanResult({
+
+        MemberID: foundMember[0],
+
+        FullName: foundMember[1],
+
+        Age: foundMember[2],
+
+        Gender: foundMember[3],
+
+        FirstTimer: foundMember[4],
+
+        Contact: foundMember[5],
+
+        LGLeader: foundMember[6],
+
+      })
+
+      setScannerError('')
+
+    } else {
+
+      setScanResult(null)
+
+      setScannerError(
+        `Member not found: ${memberId}`
+      )
+    }
+  },
+
+  () => {}
+)
 
   return () => {
     scanner.clear().catch(() => {})
