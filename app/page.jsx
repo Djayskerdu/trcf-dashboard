@@ -2391,11 +2391,11 @@ underRaw
 
           if (!qrMemberId) return
 
-          const scanUrl =
+          const qrData =
   `TRCF_MEMBER:${qrMemberId}`
 
 const qrUrl =
-  `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(scanUrl)}`
+  `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`
 
           setGeneratedQR(qrUrl)
 
