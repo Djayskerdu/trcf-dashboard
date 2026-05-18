@@ -282,6 +282,9 @@ const [isLeader, setIsLeader] = useState(false)
 const [scanResult, setScanResult] =
   useState(null)
 
+  const [scannerInstance, setScannerInstance] =
+  useState(null)
+
 const [scannerError, setScannerError] =
   useState('')
 
@@ -298,198 +301,152 @@ const [scannerError, setScannerError] =
 
   if (!isInstalled) return
 
-const scanner =
-  new Html5QrcodeScanner(
-    'reader',
-    {
-      fps: 3,
-      qrbox: 250,
-    },
-    false
-  )
+  // =========================
+  // CLEAR OLD HTML
+  // =========================
 
-let isScanning = false
+  const reader =
+    document.getElementById('reader')
 
-scanner.render(
+  if (reader) {
+    reader.innerHTML = ''
+  }
 
-  async (decodedText) => {
+  const scanner =
+    new Html5QrcodeScanner(
+      'reader',
+      {
+        fps: 5,
+        qrbox: 260,
+      },
+      false
+    )
 
-    // =========================
-    // PREVENT MULTIPLE SCANS
-    // =========================
+  setScannerInstance(scanner)
 
-    if (isScanning) return
+  let isScanning = false
 
-    isScanning = true
+  scanner.render(
 
-    console.log("SCANNED QR:", decodedText)
+    async (decodedText) => {
 
-    let memberId = decodedText
+      if (isScanning) return
 
-    // =========================
-    // QR FORMAT
-    // =========================
+      isScanning = true
 
-    if (
-      decodedText.startsWith(
-        'TRCF_MEMBER:'
-      )
-    ) {
+      let memberId = decodedText
 
-      memberId =
-        decodedText.replace(
-          'TRCF_MEMBER:',
-          ''
-        )
-    }
-
-    // =========================
-    // URL FORMAT SUPPORT
-    // =========================
-
-    try {
+      // =========================
+      // QR FORMAT
+      // =========================
 
       if (
-        decodedText.includes(
-          'action=scan'
+        decodedText.startsWith(
+          'TRCF_MEMBER:'
         )
       ) {
 
-        const url =
-          new URL(decodedText)
-
         memberId =
-          url.searchParams.get('id') || ''
+          decodedText.replace(
+            'TRCF_MEMBER:',
+            ''
+          )
       }
 
-    } catch (err) {
-
-      console.log(err)
-    }
-
-    memberId =
-      memberId
-        .toString()
-        .trim()
-
-    console.log(
-      "EXTRACTED MEMBER ID:",
-      memberId
-    )
-    console.log(
-  "ALL MEMBER IDS:",
-  members.map(m => m[0])
-)
-
-    // =========================
-    // FIND MEMBER
-    // =========================
-
-    const cleanMemberId =
-  memberId
-    .toString()
-    .trim()
-    .replace(/\s/g, '')
-    .toLowerCase()
-
-const foundMember =
-  members
-    .slice(1)
-    .find((m) => {
-
-      const sheetId =
-        String(m[0] || '')
+      memberId =
+        memberId
+          .toString()
           .trim()
+
+      const cleanMemberId =
+        memberId
           .replace(/\s/g, '')
           .toLowerCase()
 
-      return sheetId === cleanMemberId
+      const foundMember =
+        members
+          .slice(1)
+          .find((m) => {
 
-    })
+            const sheetId =
+              String(m[0] || '')
+                .trim()
+                .replace(/\s/g, '')
+                .toLowerCase()
 
-    console.log(
-      "FOUND MEMBER:",
-      foundMember
-    )
+            return (
+              sheetId === cleanMemberId
+            )
 
-    if (foundMember) {
+          })
 
-      try {
+      // =========================
+      // MEMBER FOUND
+      // =========================
 
-        // =========================
-        // STOP CAMERA FIRST
-        // =========================
+      if (foundMember) {
 
+        try {
 
+          // STOP CAMERA
+          await scanner.clear()
 
-        // =========================
-        // SAVE ATTENDANCE
-        // =========================
+          // SAVE ATTENDANCE
+          await fetch(
+            `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`
+          )
 
-        await fetch(
+        } catch (err) {
+          console.log(err)
+        }
 
-          `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`,
+        // SHOW RESULT
+        setScanResult({
 
-          {
-            method: 'GET',
-          }
+          MemberID: foundMember[0],
+
+          FullName: foundMember[1],
+
+          Age: foundMember[2],
+
+          Gender: foundMember[3],
+
+          Contact: foundMember[4],
+
+          Email: foundMember[5],
+
+          LGLeader: foundMember[6],
+
+        })
+
+        setScannerError('')
+
+      } else {
+
+        setScanResult(null)
+
+        setScannerError(
+          `Member not found: ${memberId}`
         )
 
-      } catch (err) {
-
-        console.log(err)
       }
 
-      setScanResult({
+      setTimeout(() => {
+        isScanning = false
+      }, 2500)
 
-        MemberID: foundMember[0],
+    },
 
-        FullName: foundMember[1],
+    () => {}
 
-        Age: foundMember[2],
+  )
 
-        Gender: foundMember[3],
+  return () => {
 
-        FirstTimer: foundMember[4],
+    scanner.clear().catch(() => {})
 
-        Contact: foundMember[5],
+  }
 
-        LGLeader: foundMember[6],
-
-      })
-
-      setScannerError('')
-
-    } else {
-
-      setScanResult(null)
-
-      setScannerError(
-        `Member not found: ${memberId}`
-      )
-    }
-
-    // =========================
-    // ALLOW NEXT SCAN
-    // =========================
-
-    setTimeout(() => {
-
-      isScanning = false
-
-    }, 3000)
-
-  },
-
-  () => {}
-
-)
-
-return () => {
-
-  scanner.clear().catch(() => {})
-
-}
 }, [activeTab, members])
 
 
@@ -2517,7 +2474,7 @@ underRaw
 
     <h2>Member QR Scanner</h2>
 
-    <p style={{ marginBottom: 20 }}>
+    <p className="scanner-subtitle">
       Scan TRCF Member QR Code
     </p>
 
@@ -2530,82 +2487,86 @@ underRaw
     ) : (
 
       <>
-        <div id="reader" />
 
+        {/* SHOW CAMERA ONLY IF NO RESULT */}
+        {!scanResult && (
+          <div
+            id="reader"
+            className="scanner-box"
+          />
+        )}
+
+        {/* RESULT CARD */}
         {scanResult && (
 
-          <div className="scan-result-card">
+          <div className="scan-result-card fade-in">
 
-            <h3>Member Found</h3>
+            <div className="scan-left">
 
-            <p>
-              <strong>ID:</strong>{' '}
-              {scanResult.MemberID}
-            </p>
+              <h3>
+                ✅ Attendance Saved
+              </h3>
 
-            <p>
-              <strong>Name:</strong>{' '}
-              {scanResult.FullName}
-            </p>
+              <p>
+                <strong>ID:</strong>
+                {' '}
+                {scanResult.MemberID}
+              </p>
 
-            <p>
-              <strong>Age:</strong>{' '}
-              {scanResult.Age}
-            </p>
+              <p>
+                <strong>Name:</strong>
+                {' '}
+                {scanResult.FullName}
+              </p>
 
-            <p>
-              <strong>Gender:</strong>{' '}
-              {scanResult.Gender}
-            </p>
+              <p>
+                <strong>Age:</strong>
+                {' '}
+                {scanResult.Age}
+              </p>
 
-            <p>
-              <strong>Leader:</strong>{' '}
-              {scanResult.LGLeader}
-            </p>
+              <p>
+                <strong>Gender:</strong>
+                {' '}
+                {scanResult.Gender}
+              </p>
+
+              <p>
+                <strong>Leader:</strong>
+                {' '}
+                {scanResult.LGLeader}
+              </p>
+
+            </div>
+
+            {/* RIGHT SIDE BUTTON */}
+            <div className="scan-right">
+
+              <button
+                className="scan-next-btn"
+                onClick={() => {
+
+                  setScanResult(null)
+
+                  setScannerError('')
+
+                }}
+              >
+                Scan Next QR
+              </button>
+
+            </div>
 
           </div>
 
         )}
 
-        {scanResult && (
-
-  <div className="mt-4">
-
-    <button
-
-      onClick={() => {
-
-        setScanResult(null)
-
-        setScannerError('')
-
-        setActiveTab('QR Scan')
-
-      }}
-
-      className="
-        bg-blue-600
-        hover:bg-blue-700
-        text-white
-        px-4
-        py-2
-        rounded-lg
-        font-semibold
-      "
-    >
-
-      Scan Next QR
-
-    </button>
-
-  </div>
-
-)}
-
         {scannerError && (
+
           <p className="scanner-error">
             {scannerError}
           </p>
+
         )}
 
       </>
