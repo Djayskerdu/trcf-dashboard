@@ -1,6 +1,7 @@
 'use client'
 
 import axios from 'axios'
+import { Html5QrcodeScanner } from 'html5-qrcode'
 import { useEffect, useMemo, useState } from 'react'
 
 import {
@@ -11,6 +12,9 @@ import {
   Search,
   Menu,
 } from 'lucide-react'
+
+import CalendarView from 'react-calendar'
+import 'react-calendar/dist/Calendar.css'
 
 import {
   ResponsiveContainer,
@@ -78,6 +82,7 @@ export default function Page() {
   const [leaders, setLeaders] = useState([])
   const [followup, setFollowup] = useState([])
   const [finance, setFinance] = useState([])
+  const [members, setMembers] = useState([]) // ← ADD HERE
   const [youthGetLoud, setYouthGetLoud] = useState([])
   const [yglParticipants, setYglParticipants] =
   useState([])
@@ -91,13 +96,198 @@ const [selectedEventParticipants,
   const [selectedLeader, setSelectedLeader] =
     useState(null)
 
+    const [expandedClosecell, setExpandedClosecell] =
+  useState(null)
+
   const [search, setSearch] = useState('')
+  
+
+  const goPrevMonth = () => {
+  setCalendarDate((prev) => {
+    const d = new Date(prev)
+    d.setMonth(d.getMonth() - 1)
+    return d
+  })
+}
+
+const goNextMonth = () => {
+  setCalendarDate((prev) => {
+    const d = new Date(prev)
+    d.setMonth(d.getMonth() + 1)
+    return d
+  })
+}
+
+const goToday = () => {
+  setCalendarDate(new Date())
+}
+
+const [selectedHoliday, setSelectedHoliday] =
+  useState(null)
+
+const philippineHolidays = [
+  {
+    date: '2026-01-01',
+    title: 'New Year’s Day',
+    description:
+      'Regular Holiday in the Philippines',
+  },
+  {
+    date: '2026-04-02',
+    title: 'Maundy Thursday',
+    description:
+      'Holy Week Holiday',
+  },
+  {
+    date: '2026-04-03',
+    title: 'Good Friday',
+    description:
+      'Holy Week Holiday',
+  },
+  {
+    date: '2026-04-09',
+    title: 'Araw ng Kagitingan',
+    description:
+      'Day of Valor',
+  },
+  {
+    date: '2026-05-01',
+    title: 'Labor Day',
+    description:
+      'National Labor Holiday',
+  },
+  {
+    date: '2026-06-12',
+    title: 'Independence Day',
+    description:
+      'Philippine Independence Day',
+  },
+  {
+    date: '2026-08-31',
+    title: 'National Heroes Day',
+    description:
+      'Last Monday of August',
+  },
+  {
+    date: '2026-11-30',
+    title: 'Bonifacio Day',
+    description:
+      'Birth Anniversary of Andres Bonifacio',
+  },
+  {
+    date: '2026-12-25',
+    title: 'Christmas Day',
+    description:
+      'Regular Holiday',
+  },
+  {
+    date: '2026-12-30',
+    title: 'Rizal Day',
+    description:
+      'Commemoration of Jose Rizal',
+  },
+]
+
+  const [selectedCalendarDate, setSelectedCalendarDate] =
+  useState(new Date())
+
+const [selectedCalendarEvent, setSelectedCalendarEvent] =
+  useState(null)
+
+const isDetailsOnly =
+  selectedCalendarEvent?.eventType === "DETAILS_ONLY"
+
+const today = new Date()
+
+const [calendarMonth, setCalendarMonth] =
+  useState(today.getMonth())
+
+const [calendarYear, setCalendarYear] =
+  useState(today.getFullYear())
+
+const [calendarDate, setCalendarDate] = useState(new Date())
 
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [users, setUsers] = useState([])
 const [selectedUsers, setSelectedUsers] = useState([])
 const [isLeader, setIsLeader] = useState(false)
+const [scanResult, setScanResult] =
+  useState(null)
+
+const [scannerError, setScannerError] =
+  useState('')
+
+  useEffect(() => {
+
+  if (activeTab !== 'QR Scan') return
+
+  const isInstalled =
+    window.matchMedia(
+      '(display-mode: standalone)'
+    ).matches
+
+  if (!isInstalled) return
+
+  const scanner =
+    new Html5QrcodeScanner(
+      'reader',
+      {
+        fps: 10,
+        qrbox: 250,
+      },
+      false
+    )
+
+  scanner.render(
+
+    (decodedText) => {
+
+      const foundMember =
+        members
+          .slice(1)
+          .find(
+            (m) =>
+              m[0]
+                ?.toString()
+                .trim() ===
+              decodedText.trim()
+          )
+
+      if (foundMember) {
+
+        setScanResult({
+          MemberID: foundMember[0],
+          FullName: foundMember[1],
+          Age: foundMember[2],
+          Gender: foundMember[3],
+          FirstTimer: foundMember[4],
+          Contact: foundMember[5],
+          LGLeader: foundMember[6],
+        })
+
+        setScannerError('')
+
+      } else {
+
+        setScanResult(null)
+
+        setScannerError(
+          'Member not found.'
+        )
+      }
+    },
+
+    () => {}
+  )
+
+  return () => {
+    scanner.clear().catch(() => {})
+  }
+
+}, [activeTab, members])
+
+
 
   /* ================= FETCH ================= */
 
@@ -161,15 +351,19 @@ useEffect(() => {
 
     if (!isInstalled) return
 
-  console.log(
+  const subscriptionId =
+  window.OneSignal?.User
+    ?.PushSubscription?.id
+
+console.log(
   "ONESIGNAL ID:",
   subscriptionId
 )
 
-    if (!subscriptionId) {
-      console.log("NO SUBSCRIPTION ID")
-      return
-    }
+if (!subscriptionId) {
+  console.log("NO SUBSCRIPTION ID")
+  return
+}
 
     const response = await fetch("/api/saveUser", {
   method: "POST",
@@ -545,57 +739,61 @@ const financeChartData = useMemo(() => {
 
           <div className="menu">
 
-            {[
-  {
-    name: 'Homepage',
-    icon: <Home size={18} />,
-  },
-  {
-    name: 'Dashboard',
-    icon: <Home size={18} />,
-  },
-  {
-    name: 'Attendance',
-    icon: <ClipboardList size={18} />,
-  },
-  {
-    name: 'Events',
-    icon: <Calendar size={18} />,
-  },
-  {
-    name: 'Leaders',
-    icon: <Users size={18} />,
-  },
-  {
-    name: 'FollowUp',
-    icon: <Users size={18} />,
-  },
-  {
-    name: 'Finance',
-    icon: <ClipboardList size={18} />,
-  },
-  {
-    name: 'Admin',
-    icon: <Users size={18} />,
-  }
-].map((tab) => (
+  {[
+    {
+      name: 'Homepage',
+      icon: <Home size={18} />,
+    },
+    {
+      name: 'Dashboard',
+      icon: <Home size={18} />,
+    },
+    {
+      name: 'Attendance',
+      icon: <ClipboardList size={18} />,
+    },
+    {
+      name: 'Events',
+      icon: <Calendar size={18} />,
+    },
+    {
+      name: 'Leaders',
+      icon: <Users size={18} />,
+    },
+    {
+      name: 'FollowUp',
+      icon: <Users size={18} />,
+    },
+    {
+      name: 'Finance',
+      icon: <ClipboardList size={18} />,
+    },
+    {
+      name: 'QR Scan',
+      icon: <ClipboardList size={18} />,
+    },
+    {
+      name: 'Admin',
+      icon: <Users size={18} />,
+    }
+  ].map((tab) => (
 
-              <MenuItem
-                key={tab.name}
-                icon={tab.icon}
-                text={tab.name}
-                active={activeTab === tab.name}
-                onClick={() => {
+    <MenuItem
+      key={tab.name}
+      icon={tab.icon}
+      text={tab.name}
+      active={activeTab === tab.name}
+      onClick={() => {
 
-                  setActiveTab(tab.name)
-                  setSidebarOpen(false)
+        setActiveTab(tab.name)
+        setSidebarOpen(false)
 
-                }}
-              />
+      }}
+    />
 
-            ))}
+  ))}
 
-          </div>
+</div>
 
         </div>
 
@@ -633,6 +831,7 @@ const financeChartData = useMemo(() => {
           </div>
 
         </div>
+        
 
         {activeTab === 'Homepage' && (
 
@@ -660,6 +859,7 @@ const financeChartData = useMemo(() => {
     />
 
   </div>
+  
 
 )}
 
@@ -964,440 +1164,544 @@ const financeChartData = useMemo(() => {
           </div>
         )}
 
-        {/* EVENTS */}
-        {activeTab === 'Events' && (
-
-          <div className="glass panel">
-
-            <div className="panel-header">
-
-              <h3>Events</h3>
-
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) =>
-                  setStartDate(
-                    e.target.value
-                  )
-                }
-                className="table-date"
-              />
+{/* EVENTS */}
+{activeTab === 'Events' && (
+
+  <div className="glass panel calendar-panel">
 
-            </div>
-
-            <div className="events-grid">
+    <div className="calendar-header">
+
+      <div>
+        <h2>Calendar of Activities</h2>
 
-              {searchedEvents.map((e, i) => {
+        <p>
+          Previous Month, Current Month, Future Month
+        </p>
+      </div>
+
+            <div className="calendar-filter-group">
 
-                const eventAttendance =
-                  attendance
-                    .slice(1)
-                    .filter((a) => {
+  <select
+    value={calendarMonth}
+    onChange={(e) =>
+      setCalendarMonth(
+        Number(e.target.value)
+      )
+    }
+  >
 
-                      const attendanceDate =
-                        formatDate(a[0])
+    {[
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ].map((month, index) => (
 
-                      const eventDate =
-                        formatDate(e[0])
+      <option
+        value={index}
+        key={index}
+      >
+        {month}
+      </option>
 
-                      return (
-                        attendanceDate ===
-                        eventDate
-                      )
-                    })
+    ))}
 
-                let totalParticipants = 0
-let totalFirstTimers = 0
+  </select>
 
-if (
-  e[1]
-    ?.toString()
-    .toLowerCase()
-    .includes('youth-get-loud')
-) {
+  <select
+    value={calendarYear}
+    onChange={(e) =>
+      setCalendarYear(
+        Number(e.target.value)
+      )
+    }
+  >
 
-  const yglData =
-    youthGetLoud.slice(1)
+    {Array.from(
+      { length: 10 },
+      (_, i) => 2023 + i
+    ).map((year) => (
 
-  totalParticipants =
-    yglData.length
+      <option
+        value={year}
+        key={year}
+      >
+        {year}
+      </option>
 
-  totalFirstTimers =
-    yglData.filter(
-      (p) =>
-        p[5]
-          ?.toString()
-          .toLowerCase() === 'yes'
-    ).length
+    ))}
 
-} else {
+  </select>
 
-  const eventAttendance =
-    attendance
-      .slice(1)
-      .filter((a) => {
+</div>
 
-        const attendanceDate =
-          formatDate(a[0])
+    </div>
 
-        const eventDate =
-          formatDate(e[0])
+    <div className="calendar-slider-wrapper">
 
-        return (
-          attendanceDate ===
-          eventDate
-        )
-      })
+      {/* LEFT BUTTON */}
+      <button
+        className="calendar-side-btn"
+        onClick={() => {
 
-  totalParticipants =
-    eventAttendance.length
+  if (calendarMonth === 0) {
 
-  totalFirstTimers =
-    eventAttendance.filter(
-      (a) =>
-        a[5]
-          ?.toString()
-          .toLowerCase() ===
-        'yes'
-    ).length
-}
+    setCalendarMonth(11)
+    setCalendarYear(calendarYear - 1)
 
-                return (
+  } else {
 
-                  <div
-                  className="event-card clickable"
-                  key={i}
-                  onClick={() => {
+    setCalendarMonth(calendarMonth - 1)
 
-                    if (
-                      e[1]
-                        ?.toLowerCase()
-                        .includes('youth-get-loud')
-                    ) {
+  }
 
-                      setSelectedEventParticipants({
+}}
+      >
+        ⬅
+      </button>
 
-                        title: e[1],
+      {/* CALENDARS */}
+      <div className="triple-calendar-grid">
 
-                        participants:
-                          yglParticipants.slice(1),
+        {[-1, 0, 1].map((offset, index) => {
 
-                      })
-                    }
+          const calendarDate = new Date(
+  calendarYear,
+  calendarMonth + offset,
+  1
+)
 
-                  }}
-                >
-
-                    <div className="event-top">
-
-                      <div>
-
-                        <h2>{e[1]}</h2>
-
-                        <div className="event-info">
-
-                          <p>
-                            📅{' '}
-                            {displayDate(e[0])}
-                          </p>
-
-                          <p>
-                            📍 {e[2]}
-                          </p>
-
-                          <p>
-                            ⏰{' '}
-                            {displayTime(e[3])}
-                          </p>
-
-                        </div>
-
-                        <span className="status-badge">
-                          {e[4]}
-                        </span>
-
-                      </div>
-
-                      <div className="event-stats">
-
-                        <div className="event-stat-box blue-stat">
-
-                          <span>
-                            Participants
-                          </span>
-
-                          <h3>
-                            {
-                              totalParticipants
-                            }
-                          </h3>
-
-                        </div>
-
-                        <div className="event-stat-box">
-
-                          <span>
-                            First Timers
-                          </span>
-
-                          <h3>
-                            {
-                              totalFirstTimers
-                            }
-                          </h3>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                )
-              })}
-
-            </div>
-
-          </div>
-
-        )}
-
-        {/* LEADERS */}
-        {activeTab === 'Leaders' && (
-
-          <div className="glass panel">
-
-            <h3>Leaders</h3>
-
-            <div className="leaders-grid">
-
-              {sortedLeaders.map((l, i) => {
-
-                const members =
-                  l[3]
-                    ?.split(',')
-                    .map((member) =>
-                      member.trim()
-                    )
-                    .filter(Boolean) || []
-
-                return (
-
-                  <div
-                    onClick={() =>
-  setSelectedLeader({
-    name: l[1],
-    members,
-    leaderData: l,
-  })
-}
-                  >
-
-                    <div className="leader-avatar">
-                      {l[1]?.charAt(0)}
-                    </div>
-
-                    <h2>{l[1]}</h2>
-
-                    <p>{l[0]}</p>
-
-                    <div className="leader-meta">
-
-                      <span>
-                        👥 {members.length}{' '}
-                        Members
-                      </span>
-
-                      <span>
-                        📞 {l[4]}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                )
-              })}
-
-            </div>
-
-          </div>
-        )}
-
-        {/* LEADER POPUP */}
-        {selectedLeader && (
-
-          <div
-            className="leader-popup-overlay"
-            onClick={() =>
-              setSelectedLeader(null)
-            }
-          >
+          return (
 
             <div
-              className="leader-popup"
-              onClick={(e) =>
-                e.stopPropagation()
-              }
+              className="mini-calendar-box"
+              key={index}
             >
 
-              <div className="popup-header">
+              <CalendarView
 
-                <h2>
-                  {selectedLeader.name}
-                  's LifeGroup
-                </h2>
+              view="month"
+maxDetail="month"
+minDetail="month"
+navigationLabel={null}
 
-                <button
-                  className="popup-close"
-                  onClick={() =>
-                    setSelectedLeader(null)
-                  }
-                >
-                  ✕
-                </button>
+  prevLabel={null}
+  nextLabel={null}
+  prev2Label={null}
+  next2Label={null}
 
-              </div>
+  showNeighboringMonth={true}
 
-                <div className="popup-members">
+  value={null}
 
-  {selectedLeader.members.length > 0 ? (
+  activeStartDate={calendarDate}
 
-    selectedLeader.members.map(
-      (member, index) => {
+onClickDay={(value) => {
 
-        const memberName =
-  member.trim().toLowerCase()
+  setSelectedCalendarDate(value)
 
-        const leaderData =
-          leaders.find(
-            (l) =>
-              l[1] ===
-              selectedLeader.name
+  const clickedDate =
+    formatDate(value)
+
+  /* HOLIDAY CHECK */
+  const holiday =
+    philippineHolidays.find(
+      (h) => h.date === clickedDate
+    )
+
+  if (holiday) {
+
+    setSelectedHoliday({
+      title: holiday.title,
+      description:
+        holiday.description,
+      date: holiday.date,
+    })
+
+  } else {
+
+    setSelectedHoliday(null)
+  }
+
+  /* EVENT CHECK */
+  const foundEvent =
+    events.slice(1).find((e) => {
+
+      const eventDate =
+        formatDate(e[0])
+
+      return eventDate === clickedDate
+    })
+
+  if (!foundEvent) {
+
+    setSelectedCalendarEvent(null)
+    return
+  }
+
+  let totalParticipants = 0
+  let totalFirstTimers = 0
+  let participantList = []
+
+  if (
+    foundEvent[1]
+      ?.toLowerCase()
+      .includes('youth')
+  ) {
+
+    participantList =
+      youthGetLoud.slice(1)
+
+    totalParticipants =
+      participantList.length
+
+    totalFirstTimers =
+      participantList.filter((p) => {
+
+        return (
+          p[5]
+            ?.toString()
+            .trim()
+            .toLowerCase() === 'yes'
+        )
+
+      }).length
+
+  } else {
+
+    participantList =
+      attendance
+        .slice(1)
+        .filter((a) => {
+
+          const attendanceDate =
+            formatDate(a[0])
+
+          return (
+            attendanceDate === clickedDate
           )
+        })
 
-          const cleanArray = (value) =>
-  value
-    ?.split(',')
-    .map((m) =>
-      m.trim().toLowerCase()
+    totalParticipants =
+      participantList.length
+
+    totalFirstTimers =
+      participantList.filter((a) => {
+
+        return (
+          a[5]
+            ?.toString()
+            .trim()
+            .toLowerCase() === 'yes'
+        )
+
+      }).length
+  }
+
+  const rawTime = foundEvent[3]
+
+  let formattedTime = '-'
+
+  if (rawTime) {
+
+    const parsedTime =
+      new Date(rawTime)
+
+    if (!isNaN(parsedTime)) {
+
+      formattedTime =
+        parsedTime.toLocaleTimeString(
+          [],
+          {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          }
+        )
+
+    } else {
+
+      formattedTime = rawTime
+    }
+  }
+
+const eventType = foundEvent[5]
+
+setSelectedCalendarEvent({
+  title: foundEvent[1],
+  location: foundEvent[2],
+  time: formattedTime,
+  status: foundEvent[4],
+  date: foundEvent[0],
+  eventType, // ✅ ADD THIS
+
+  participants: totalParticipants,
+  firstTimers: totalFirstTimers,
+})
+
+  setSelectedEventParticipants({
+
+    title: foundEvent[1],
+
+    participants:
+      participantList.map((p) => [
+
+        p[1] || '-',
+        p[2] || '-',
+        p[3] || '-',
+        p[4] || '-',
+        p[5] || '-',
+        p[6] || '-',
+      ]),
+  })
+}}
+
+  tileClassName={({ date, view }) => {
+
+    if (view !== 'month') return null
+
+    const hasEvent =
+      events
+        .slice(1)
+        .find((e) => {
+
+          const eventDate = new Date(e[0])
+
+          if (isNaN(eventDate)) return false
+
+          return (
+            eventDate.getFullYear() === date.getFullYear() &&
+            eventDate.getMonth() === date.getMonth() &&
+            eventDate.getDate() === date.getDate()
+          )
+        })
+
+    return hasEvent
+      ? 'event-day'
+      : null
+  }}
+/>
+
+            </div>
+
+          )
+        })}
+
+      </div>
+
+      {/* RIGHT BUTTON */}
+      <button
+        className="calendar-side-btn"
+        onClick={() => {
+
+  if (calendarMonth === 11) {
+
+    setCalendarMonth(0)
+    setCalendarYear(calendarYear + 1)
+
+  } else {
+
+    setCalendarMonth(calendarMonth + 1)
+
+  }
+
+}}
+      >
+        ➡
+      </button>
+
+    </div>
+
+  </div>
+
+)}
+
+
+{selectedCalendarEvent && ( 
+  <div
+    className="leader-popup-overlay"
+    onClick={() => {
+      setSelectedCalendarEvent(null)
+      setSelectedEventParticipants(null)
+    }}
+  >
+    <div
+      className={`event-popup-layout ${
+        isDetailsOnly ? "single-mode" : ""
+      }`}
+      onClick={(e) => e.stopPropagation()}
+    >
+
+      {/* LEFT SIDE */}
+      <div className="event-popup-left">
+        <h2>{selectedCalendarEvent.title}</h2>
+
+        <div className="event-info-list">
+          <div className="event-info-card">
+            <span>📅 Date</span>
+            <h4>{displayDate(selectedCalendarEvent.date)}</h4>
+          </div>
+
+          <div className="event-info-card">
+            <span>🕒 Time</span>
+            <h4>{selectedCalendarEvent.time}</h4>
+          </div>
+
+          <div className="event-info-card">
+            <span>📍 Location</span>
+            <h4>{selectedCalendarEvent.location}</h4>
+          </div>
+
+          <div className="event-info-card">
+            <span>📌 Status</span>
+            <h4>{selectedCalendarEvent.status}</h4>
+          </div>
+        </div>
+      </div>
+
+      {/* MIDDLE (ONLY IF NOT DETAILS_ONLY) */}
+      {!isDetailsOnly && (
+        <div className="event-popup-middle">
+
+          <div className="event-participant-scroll">
+            <h1>LIST OF PARTICIPANTS</h1>
+            {selectedEventParticipants?.participants?.length > 0 ? (
+              selectedEventParticipants.participants.map((p, i) => (
+                <div className="popup-member-card" key={i}>
+                  <div className="popup-member-top">
+                    <span>{i + 1}.</span>
+                    <h4>{p[0]}</h4>
+                  </div>
+
+                  <div className="followup-body">
+                    <p>🎂 Age: {p[1]}</p>
+                    <p>🙋 Invited By: {p[2]}</p>
+                    <p>🏫 School: {p[3]}</p>
+                    <p>✨ First Timer: {p[4]}</p>
+                    <p>📜 Reminder Agreement: {p[5]}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ opacity: 0.6 }}>No participant data for this event.</p>
+            )}
+          </div>
+
+        </div>
+      )}
+
+      {/* RIGHT SIDE (ONLY IF NOT DETAILS_ONLY) */}
+      {!isDetailsOnly && (
+        <div className="event-popup-right">
+
+          <button
+            className="event-close-btn"
+            onClick={() => {
+              setSelectedCalendarEvent(null)
+              setSelectedEventParticipants(null)
+            }}
+          >
+            ✕
+          </button>
+
+          <div className="event-stat-box blue-stat">
+            <span>Total Participants</span>
+            <h3>{selectedCalendarEvent.participants}</h3>
+          </div>
+
+          <div className="event-stat-box green-stat">
+            <span>Total First Timers</span>
+            <h3>{selectedCalendarEvent.firstTimers}</h3>
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  </div>
+)}
+
+{/* LEADERS */}
+{activeTab === 'Leaders' && (
+
+  <div className="glass panel">
+
+    <h3>Leaders</h3>
+
+    <div className="leaders-grid">
+
+      {sortedLeaders.map((l, i) => {
+
+        const members =
+  l[3]
+    ?.split(/\r?\n|,/)
+    .map((member) =>
+      member
+        .replace(/"/g, '')
+        .trim()
     )
     .filter(Boolean) || []
 
-const closecell =
-  cleanArray(leaderData?.[5])
-
-const suynl =
-  cleanArray(leaderData?.[6])
-
-const lifeclass =
-  cleanArray(leaderData?.[7])
-
-const sol1 =
-  cleanArray(leaderData?.[8])
-
-const sol2 =
-  cleanArray(leaderData?.[9])
-
-const sol3 =
-  cleanArray(leaderData?.[10])
-
         return (
 
           <div
-            className="popup-member-card"
-            key={index}
+            className="leader-card clickable"
+            key={i}
+            onClick={() =>
+              setSelectedLeader({
+                name: l[1],
+                members,
+                leaderData: l,
+                level: 'main',
+              })
+            }
           >
 
-            <div className="popup-member-top">
-
-              <span>
-                {index + 1}.
-              </span>
-
-              <h4>{member}</h4>
-
+            <div className="leader-avatar">
+              {l[1]?.charAt(0)}
             </div>
 
-            <div className="disciple-grid">
+            <h2>{l[1]}</h2>
 
-              {closecell.includes(memberName) && (
-                <div className="disciple-badge closecell">
-                  CLOSECELL
-                </div>
-              )}
+            <p>{l[0]}</p>
 
-              <div className={`disciple-badge ${
-                suynl.includes(memberName)
-                  ? 'done'
-                  : ''
-              }`}>
-                SUYNL
-              </div>
+            <div className="leader-meta">
 
-              <div className={`disciple-badge ${
-                lifeclass.includes(memberName)
-                  ? 'done'
-                  : ''
-              }`}>
-                LIFECLASS
-              </div>
+              <span>
+                👥 {Number(l[2] || 0)} Members
+              </span>
 
-              <div className={`disciple-badge ${
-                sol1.includes(memberName)
-                  ? 'done'
-                  : ''
-              }`}>
-                SOL1
-              </div>
-
-              <div className={`disciple-badge ${
-                sol2.includes(memberName)
-                  ? 'done'
-                  : ''
-              }`}>
-                SOL2
-              </div>
-
-              <div className={`disciple-badge ${
-                sol3.includes(memberName)
-                  ? 'done'
-                  : ''
-              }`}>
-                SOL3
-              </div>
+              <span>
+                📞 {l[4]}
+              </span>
 
             </div>
 
           </div>
 
         )
-      }
-    )
+      })}
 
-  ) : (
+    </div>
 
-    <p>No members found.</p>
+  </div>
+)}
 
-  )}
-
-              </div>
-
-            </div>
-
-          </div>
-
-        )}
-
-        {/* EVENT PARTICIPANTS POPUP */}
-{selectedEventParticipants && (
+{/* LEADER POPUP */}
+{selectedLeader && (
 
   <div
     className="leader-popup-overlay"
     onClick={() =>
-      setSelectedEventParticipants(null)
+      setSelectedLeader(null)
     }
   >
 
@@ -1411,14 +1715,13 @@ const sol3 =
       <div className="popup-header">
 
         <h2>
-          {selectedEventParticipants.title}
-          {' '}Participants
+          {selectedLeader.name}'s Members
         </h2>
 
         <button
           className="popup-close"
           onClick={() =>
-            setSelectedEventParticipants(null)
+            setSelectedLeader(null)
           }
         >
           ✕
@@ -1428,110 +1731,250 @@ const sol3 =
 
       <div className="popup-members">
 
-        {selectedEventParticipants
-          .participants.length > 0 ? (
+        {selectedLeader.members.length > 0 ? (
 
-          selectedEventParticipants
-            .participants.map((p, i) => (
+          selectedLeader.members.map(
+            (member, index) => {
 
-            <div
-              className="popup-member-card"
-              key={i}
-            >
+              const leaderData =
+                selectedLeader.leaderData
 
-              <div className="popup-member-top">
+              const memberName =
+                member
+                  .trim()
+                  .toLowerCase()
 
-  <span>
-    {index + 1}.
-  </span>
+              const cleanArray = (value) =>
+  value
+    ?.split(/\r?\n|,/)
+    .map((m) =>
+      m
+        .replace(/"/g, '')
+        .trim()
+        .toLowerCase()
+    )
+    .filter(Boolean) || []
 
-  <h4
-    style={{
-      cursor: closecell.includes(memberName)
-        ? 'pointer'
-        : 'default',
+              const closecell =
+                cleanArray(leaderData?.[5])
 
-      color: closecell.includes(memberName)
-        ? '#60a5fa'
-        : 'white',
+              const underRaw = leaderData?.[6] || ''
 
-      textDecoration: closecell.includes(memberName)
-        ? 'underline'
-        : 'none',
-    }}
+let underMembers = []
 
-    onClick={() => {
+underRaw
+  .split('\n')
+  .forEach((line) => {
 
-      if (!closecell.includes(memberName))
-        return
+    const parts = line.split(':')
 
-      const childLeader =
-        leaders.find(
-          (x) =>
-            x[1]
-              ?.toLowerCase()
-              .trim() === memberName
-        )
+    if (parts.length < 2) return
 
-      if (!childLeader) return
+    const leaderName =
+      parts[0]
+        .trim()
+        .toLowerCase()
 
-      const childMembers =
-        childLeader[3]
-          ?.split(',')
-          .map((m) => m.trim())
-          .filter(Boolean) || []
+    if (leaderName !== memberName) return
 
-      setSelectedLeader({
-        name: childLeader[1],
-        members: childMembers,
-        leaderData: childLeader,
-      })
-    }}
-  >
-    {member}
-  </h4>
+    underMembers =
+      parts[1]
+        .split('|')
+        .map((m) => m.trim())
+        .filter(Boolean)
+
+  })
+
+              const suynl =
+                cleanArray(leaderData?.[7])
+
+              const lifeclass =
+                cleanArray(leaderData?.[8])
+
+              const sol1 =
+                cleanArray(leaderData?.[9])
+
+              const sol2 =
+                cleanArray(leaderData?.[10])
+
+              const sol3 =
+                cleanArray(leaderData?.[11])
+
+              const isClosecell =
+                closecell.includes(memberName)
+
+              return (
+
+                <div
+                  className="popup-member-card"
+                  key={index}
+                >
+
+                  <div
+  className={`popup-member-top ${
+    isClosecell
+      ? 'clickable'
+      : ''
+  }`}
+  onClick={() => {
+
+    if (!isClosecell) return
+
+    setExpandedClosecell(
+      expandedClosecell === member
+        ? null
+        : member
+    )
+  }}
+>
+
+                    <span>
+                      {index + 1}.
+                    </span>
+
+                    <h4>
+                      {member}
+
+                      {isClosecell && ' 🔥'}
+                    </h4>
+
+                  </div>
+
+                  <div className="disciple-grid">
+
+  {isClosecell && (
+    <div className="disciple-badge closecell">
+      CLOSECELL
+    </div>
+  )}
+
+  <div className={`disciple-badge ${
+    suynl.includes(memberName)
+      ? 'done'
+      : ''
+  }`}>
+    SUYNL
+  </div>
+
+  <div className={`disciple-badge ${
+    lifeclass.includes(memberName)
+      ? 'done'
+      : ''
+  }`}>
+    LIFECLASS
+  </div>
+
+  <div className={`disciple-badge ${
+    sol1.includes(memberName)
+      ? 'done'
+      : ''
+  }`}>
+    SOL1
+  </div>
+
+  <div className={`disciple-badge ${
+    sol2.includes(memberName)
+      ? 'done'
+      : ''
+  }`}>
+    SOL2
+  </div>
+
+  <div className={`disciple-badge ${
+    sol3.includes(memberName)
+      ? 'done'
+      : ''
+  }`}>
+    SOL3
+  </div>
 
 </div>
 
-              <div className="followup-body">
+{expandedClosecell === member &&
+  underMembers.length > 0 && (
 
-                <p>
-                  🎂 Age: {p[2]}
-                </p>
+  <div className="under-members-box">
 
-                <p>
-                  🙋 Invited By:
-                  {' '}
-                  {p[3]}
-                </p>
+    <h4>Under Members</h4>
 
-                <p>
-                  🏫 School:
-                  {' '}
-                  {p[4]}
-                </p>
+    {underMembers.map((u, idx) => {
 
-                <p>
-                  ✨ First Timer:
-                  {' '}
-                  {p[5]}
-                </p>
+      const underName =
+        u.trim().toLowerCase()
 
-                <p>
-                  📜 Reminder Agreement:
-                  {' '}
-                  {p[6]}
-                </p>
+      return (
 
-              </div>
+        <div
+          className="under-member-item"
+          key={idx}
+        >
 
+          <div className="under-member-name">
+            {u}
+          </div>
+
+          <div className="disciple-grid">
+
+            <div className={`disciple-badge ${
+              suynl.includes(underName)
+                ? 'done'
+                : ''
+            }`}>
+              SUYNL
             </div>
 
-          ))
+            <div className={`disciple-badge ${
+              lifeclass.includes(underName)
+                ? 'done'
+                : ''
+            }`}>
+              LIFECLASS
+            </div>
+
+            <div className={`disciple-badge ${
+              sol1.includes(underName)
+                ? 'done'
+                : ''
+            }`}>
+              SOL1
+            </div>
+
+            <div className={`disciple-badge ${
+              sol2.includes(underName)
+                ? 'done'
+                : ''
+            }`}>
+              SOL2
+            </div>
+
+            <div className={`disciple-badge ${
+              sol3.includes(underName)
+                ? 'done'
+                : ''
+            }`}>
+              SOL3
+            </div>
+
+          </div>
+
+        </div>
+
+      )
+    })}
+
+  </div>
+
+)}
+
+</div>
+
+              )
+            }
+          )
 
         ) : (
 
-          <p>No participants found.</p>
+          <p>No members found.</p>
 
         )}
 
@@ -1774,6 +2217,77 @@ const sol3 =
       )
     })()}
   </div>
+)}
+
+{/* QR SCANNER */}
+{activeTab === 'QR Scan' && (
+
+  <div className="glass panel">
+
+    <h2>Member QR Scanner</h2>
+
+    <p style={{ marginBottom: 20 }}>
+      Scan TRCF Member QR Code
+    </p>
+
+    {!window.matchMedia('(display-mode: standalone)').matches ? (
+
+      <div className="scanner-warning">
+        ⚠ Install the app first to use scanner.
+      </div>
+
+    ) : (
+
+      <>
+        <div id="reader" />
+
+        {scanResult && (
+
+          <div className="scan-result-card">
+
+            <h3>Member Found</h3>
+
+            <p>
+              <strong>ID:</strong>{' '}
+              {scanResult.MemberID}
+            </p>
+
+            <p>
+              <strong>Name:</strong>{' '}
+              {scanResult.FullName}
+            </p>
+
+            <p>
+              <strong>Age:</strong>{' '}
+              {scanResult.Age}
+            </p>
+
+            <p>
+              <strong>Gender:</strong>{' '}
+              {scanResult.Gender}
+            </p>
+
+            <p>
+              <strong>Leader:</strong>{' '}
+              {scanResult.LGLeader}
+            </p>
+
+          </div>
+
+        )}
+
+        {scannerError && (
+          <p className="scanner-error">
+            {scannerError}
+          </p>
+        )}
+
+      </>
+
+    )}
+
+  </div>
+
 )}
 
 {activeTab === 'Admin' && (
