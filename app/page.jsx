@@ -426,11 +426,12 @@ useEffect(() => {
       const res = await axios.get(API_URL)
 
       setAttendance(res.data.attendance || [])
-      setEvents(res.data.events || [])
-      setLeaders(res.data.leaders || [])
-      setFollowup(res.data.followup || [])
-      setFinance(res.data.finance || [])
-      setUsers(res.data.users || [])
+setEvents(res.data.events || [])
+setLeaders(res.data.leaders || [])
+setFollowup(res.data.followup || [])
+setFinance(res.data.finance || [])
+setUsers(res.data.users || [])
+setMembers(res.data.members || [])
       setYouthGetLoud(
   res.data.youthgetloud || []
 )
