@@ -2625,3 +2625,57 @@ font-size: 14px;
   flex-shrink: 0;
   z-index: 5;
 }
+
+/* ================= MOBILE CALENDAR TOP NAV ================= */
+
+.mobile-calendar-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+
+  .mobile-calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+
+  .mobile-calendar-nav h2 {
+    flex: 1;
+    text-align: center;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    color: white;
+  }
+
+  .mobile-calendar-btn {
+    width: 42px;
+    height: 42px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: rgba(255,255,255,0.08);
+
+    color: white;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .calendar-side-btn {
+    display: none;
+  }
+
+}

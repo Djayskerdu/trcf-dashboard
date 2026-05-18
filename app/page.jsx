@@ -1348,6 +1348,64 @@ const financeChartData = useMemo(() => {
 
     </div>
 
+{isMobile && (
+
+  <div className="mobile-calendar-nav">
+
+    <button
+      className="mobile-calendar-btn"
+      onClick={() => {
+
+        if (calendarMonth === 0) {
+
+          setCalendarMonth(11)
+          setCalendarYear(calendarYear - 1)
+
+        } else {
+
+          setCalendarMonth(calendarMonth - 1)
+
+        }
+
+      }}
+    >
+      ⬅
+    </button>
+
+    <h2>
+      {new Date(
+        calendarYear,
+        calendarMonth
+      ).toLocaleString('default', {
+        month: 'long',
+        year: 'numeric',
+      })}
+    </h2>
+
+    <button
+      className="mobile-calendar-btn"
+      onClick={() => {
+
+        if (calendarMonth === 11) {
+
+          setCalendarMonth(0)
+          setCalendarYear(calendarYear + 1)
+
+        } else {
+
+          setCalendarMonth(calendarMonth + 1)
+
+        }
+
+      }}
+    >
+      ➡
+    </button>
+
+  </div>
+
+)}
+
     <div className="calendar-slider-wrapper">
 
       {/* LEFT BUTTON */}
