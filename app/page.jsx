@@ -83,6 +83,10 @@ export default function Page() {
   const [followup, setFollowup] = useState([])
   const [finance, setFinance] = useState([])
   const [members, setMembers] = useState([]) // ← ADD HERE
+  const [qrMemberId, setQrMemberId] =
+  useState('')
+  const [generatedQR, setGeneratedQR] =
+  useState('')
   const [youthGetLoud, setYouthGetLoud] = useState([])
   const [yglParticipants, setYglParticipants] =
   useState([])
@@ -2290,40 +2294,67 @@ underRaw
 
     )}
 
-<br></br>
-    <button
-  className="reset-btn"
-  onClick={() => {
+<br />
 
-    const memberList =
-      members.slice(1)
+<div className="qr-generator-box">
 
-    memberList.forEach((m) => {
+  <h3>QR Code Generator</h3>
 
-      const memberId = m[0]
+  <input
+    type="text"
+    placeholder="Enter MemberID"
+    value={qrMemberId}
+    onChange={(e) =>
+      setQrMemberId(e.target.value)
+    }
+    className="qr-input"
+  />
+
+  <button
+    className="reset-btn"
+    onClick={() => {
+
+      if (!qrMemberId) return
 
       const qrUrl =
-        `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(memberId)}`
+        `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrMemberId)}`
 
-      const link =
-        document.createElement('a')
+      setGeneratedQR(qrUrl)
 
-      link.href = qrUrl
+    }}
+  >
+    Generate QR
+  </button>
 
-      link.download = `${memberId}.png`
+  {generatedQR && (
 
-      document.body.appendChild(link)
+    <div className="generated-qr-preview">
 
-      link.click()
+      <img
+        src={generatedQR}
+        alt="Generated QR"
+        className="generated-qr-image"
+      />
 
-      document.body.removeChild(link)
+      <br />
 
-    })
+      <a
+        href={generatedQR}
+        download={`${qrMemberId}.png`}
+      >
+        <button className="reset-btn">
+          Download QR
+        </button>
+      </a>
 
-  }}
->
-  Generate All QR
-</button>
+    </div>
+
+  )}
+
+  <br />
+
+
+</div>
 
   </div>
 

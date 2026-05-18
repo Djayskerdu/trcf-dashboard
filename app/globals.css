@@ -2368,3 +2368,37 @@ font-size: 14px;
   align-items: center;  
   backdrop-filter: blur(6px);
 }
+
+.qr-generator-box {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 320px;
+}
+
+.qr-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  background: white;
+  color: black;
+  font-size: 15px;
+}
+
+.generated-qr-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.generated-qr-image {
+  width: 240px;
+  height: 240px;
+  border-radius: 18px;
+  background: white;
+  padding: 10px;
+}
