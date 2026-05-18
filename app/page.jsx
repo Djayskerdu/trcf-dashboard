@@ -73,6 +73,34 @@ export default function Page() {
   }
 }, [])
 
+const handleSendFirstTimersBulk = async () => {
+  try {
+    const list = followup.slice(1)
+
+    const payload = list.map(f => ({
+      name: f[1],
+      email: f[8],
+      id: f[9],
+    }))
+
+    const res = await fetch(
+      `${API_URL}?action=sendFirstTimersBulk`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    )
+
+    alert("✅ Bulk Welcome QR sent!")
+  } catch (err) {
+    console.error(err)
+    alert("❌ Failed to send bulk QR")
+  }
+}
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [installPrompt, setInstallPrompt] =
   useState(null)
@@ -525,7 +553,9 @@ useEffect(() => {
 
     try {
 
-      const res = await axios.get(API_URL)
+      const res = await axios.get(
+  `${API_URL}?t=${Date.now()}`
+)
 
       setAttendance(res.data.attendance || [])
 setEvents(res.data.events || [])
@@ -2172,6 +2202,13 @@ underRaw
                 </p>
 
               </div>
+              <button
+  className="reset-btn"
+  style={{ marginTop: "10px" }}
+  onClick={handleSendFirstTimersBulk}
+>
+  Send Welcome QR (ALL)
+</button>
 
               <input
                 type="date"
@@ -2201,6 +2238,7 @@ underRaw
                   )
                 })
                 .map((f, i) => (
+                  
 
                   <div
                     className="followup-card"
@@ -2256,13 +2294,15 @@ underRaw
 
                   </div>
 
-                ))}
+                )
+                )}
 
             </div>
 
           </div>
 
         )}
+        
 
   {/* FINANCE */}
 {activeTab === 'Finance' && (
