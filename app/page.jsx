@@ -2294,67 +2294,64 @@ underRaw
 
     )}
 
-<br />
+    <br />
 
-<div className="qr-generator-box">
+    <div className="qr-generator-box">
 
-  <h3>QR Code Generator</h3>
+      <h3>QR Code Generator</h3>
 
-  <input
-    type="text"
-    placeholder="Enter MemberID"
-    value={qrMemberId}
-    onChange={(e) =>
-      setQrMemberId(e.target.value)
-    }
-    className="qr-input"
-  />
-
-  <button
-    className="reset-btn"
-    onClick={() => {
-
-      if (!qrMemberId) return
-
-      const qrUrl =
-        `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrMemberId)}`
-
-      setGeneratedQR(qrUrl)
-
-    }}
-  >
-    Generate QR
-  </button>
-
-  {generatedQR && (
-
-    <div className="generated-qr-preview">
-
-      <img
-        src={generatedQR}
-        alt="Generated QR"
-        className="generated-qr-image"
+      <input
+        type="text"
+        placeholder="Enter MemberID"
+        value={qrMemberId}
+        onChange={(e) =>
+          setQrMemberId(e.target.value)
+        }
+        className="qr-input"
       />
 
-      <br />
+      <button
+        className="reset-btn"
+        onClick={() => {
 
-      <a
-        href={generatedQR}
-        download={`${qrMemberId}.png`}
+          if (!qrMemberId) return
+
+          const qrUrl =
+            `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrMemberId)}`
+
+          setGeneratedQR(qrUrl)
+
+        }}
       >
-        <button className="reset-btn">
-          Download QR
-        </button>
-      </a>
+        Generate QR
+      </button>
+
+      {generatedQR && (
+
+        <div className="generated-qr-preview">
+
+          <img
+            src={generatedQR}
+            alt="Generated QR"
+            className="generated-qr-image"
+          />
+
+          <br />
+
+          <a
+            href={generatedQR}
+            download={`${qrMemberId}.png`}
+          >
+            <button className="reset-btn">
+              Download QR
+            </button>
+          </a>
+
+        </div>
+
+      )}
 
     </div>
-
-  )}
-
-  <br />
-
-
-</div>
 
   </div>
 
