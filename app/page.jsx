@@ -249,9 +249,12 @@ const [scannerError, setScannerError] =
           .find(
             (m) =>
               m[0]
-                ?.toString()
-                .trim() ===
-              decodedText.trim()
+  ?.toString()
+  .trim()
+  .toLowerCase() ===
+decodedText
+  .trim()
+  .toLowerCase()
           )
 
       if (foundMember) {
@@ -2286,6 +2289,41 @@ underRaw
       </>
 
     )}
+
+<br></br>
+    <button
+  className="reset-btn"
+  onClick={() => {
+
+    const memberList =
+      members.slice(1)
+
+    memberList.forEach((m) => {
+
+      const memberId = m[0]
+
+      const qrUrl =
+        `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(memberId)}`
+
+      const link =
+        document.createElement('a')
+
+      link.href = qrUrl
+
+      link.download = `${memberId}.png`
+
+      document.body.appendChild(link)
+
+      link.click()
+
+      document.body.removeChild(link)
+
+    })
+
+  }}
+>
+  Generate All QR
+</button>
 
   </div>
 
