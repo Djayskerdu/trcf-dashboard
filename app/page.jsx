@@ -249,7 +249,17 @@ scanner.render(
 
     console.log("SCANNED QR:", decodedText)
 
-    let memberId = decodedText
+   let memberId = decodedText
+
+if (decodedText.startsWith('TRCF_MEMBER:')) {
+
+  memberId =
+    decodedText.replace(
+      'TRCF_MEMBER:',
+      ''
+    )
+
+}
 
     /* =========================
        EXTRACT MEMBER ID
@@ -308,11 +318,11 @@ scanner.render(
       try {
 
         await fetch(
-          `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}`,
-          {
-            method: 'GET',
-          }
-        )
+  `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`,
+  {
+    method: 'GET',
+  }
+)
 
       } catch (err) {
 
@@ -2382,7 +2392,7 @@ underRaw
           if (!qrMemberId) return
 
           const scanUrl =
-  `${API_URL}?action=scan&id=${encodeURIComponent(qrMemberId)}`
+  `TRCF_MEMBER:${qrMemberId}`
 
 const qrUrl =
   `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(scanUrl)}`
