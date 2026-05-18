@@ -376,25 +376,36 @@ scanner.render(
       "EXTRACTED MEMBER ID:",
       memberId
     )
+    console.log(
+  "ALL MEMBER IDS:",
+  members.map(m => m[0])
+)
 
     // =========================
     // FIND MEMBER
     // =========================
 
-    const foundMember =
-      members
-        .slice(1)
-        .find((m) => {
+    const cleanMemberId =
+  memberId
+    .toString()
+    .trim()
+    .replace(/\s/g, '')
+    .toLowerCase()
 
-          return (
-            m[0]
-              ?.toString()
-              .trim()
-              .toLowerCase() ===
-            memberId
-              .toLowerCase()
-          )
-        })
+const foundMember =
+  members
+    .slice(1)
+    .find((m) => {
+
+      const sheetId =
+        String(m[0] || '')
+          .trim()
+          .replace(/\s/g, '')
+          .toLowerCase()
+
+      return sheetId === cleanMemberId
+
+    })
 
     console.log(
       "FOUND MEMBER:",
