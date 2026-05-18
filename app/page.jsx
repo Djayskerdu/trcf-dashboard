@@ -295,7 +295,7 @@ const [scannerError, setScannerError] =
     new Html5QrcodeScanner(
       'reader',
       {
-        fps: 3,
+        fps: 5,
         qrbox: 250,
       },
       false
