@@ -2579,7 +2579,7 @@ underRaw
 
         setScannerError('')
 
-        setActiveTab('scanner')
+        setActiveTab('QR Scan')
 
       }}
 
