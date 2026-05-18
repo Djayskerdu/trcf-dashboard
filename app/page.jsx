@@ -2215,7 +2215,16 @@ underRaw
               <button
   className="reset-btn"
   style={{ marginTop: "10px" }}
-  onClick={handleSendFirstTimersBulk}
+  onClick={async () => {
+
+  if (window.sendingBulkQR) return
+
+  window.sendingBulkQR = true
+
+  await handleSendFirstTimersBulk()
+
+  window.sendingBulkQR = false
+}}
 >
   Send Welcome QR (ALL)
 </button>
