@@ -2543,140 +2543,17 @@ underRaw
             <div className="scan-right">
 
               <button
-  className="scan-next-btn"
-  onClick={async () => {
+                className="scan-next-btn"
+                onClick={() => {
 
-    setScanResult(null)
-    setScannerError('')
+                  setScanResult(null)
 
-    // RESTART SCANNER
-    if (scannerInstance) {
+                  setScannerError('')
 
-      try {
-
-        await scannerInstance.clear()
-
-      } catch (e) {}
-
-      const reader =
-        document.getElementById('reader')
-
-      if (reader) {
-        reader.innerHTML = ''
-      }
-
-      const newScanner =
-        new Html5QrcodeScanner(
-          'reader',
-          {
-            fps: 5,
-            qrbox: 260,
-          },
-          false
-        )
-
-      setScannerInstance(newScanner)
-
-      let isScanning = false
-
-      newScanner.render(
-
-        async (decodedText) => {
-
-          if (isScanning) return
-
-          isScanning = true
-
-          let memberId = decodedText
-
-          if (
-            decodedText.startsWith(
-              'TRCF_MEMBER:'
-            )
-          ) {
-
-            memberId =
-              decodedText.replace(
-                'TRCF_MEMBER:',
-                ''
-              )
-          }
-
-          memberId =
-            memberId
-              .toString()
-              .trim()
-
-          const cleanMemberId =
-            memberId
-              .replace(/\s/g, '')
-              .toLowerCase()
-
-          const foundMember =
-            members
-              .slice(1)
-              .find((m) => {
-
-                const sheetId =
-                  String(m[0] || '')
-                    .trim()
-                    .replace(/\s/g, '')
-                    .toLowerCase()
-
-                return (
-                  sheetId === cleanMemberId
-                )
-
-              })
-
-          if (foundMember) {
-
-            try {
-
-              await newScanner.clear()
-
-              await fetch(
-                `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`
-              )
-
-            } catch (err) {}
-
-            setScanResult({
-
-              MemberID: foundMember[0],
-              FullName: foundMember[1],
-              Age: foundMember[2],
-              Gender: foundMember[3],
-              Contact: foundMember[4],
-              Email: foundMember[5],
-              LGLeader: foundMember[6],
-
-            })
-
-          } else {
-
-            setScanResult(null)
-
-            setScannerError(
-              `Member not found: ${memberId}`
-            )
-          }
-
-          setTimeout(() => {
-            isScanning = false
-          }, 2500)
-
-        },
-
-        () => {}
-
-      )
-    }
-
-  }}
->
-  Scan Next QR
-</button>
+                }}
+              >
+                Scan Next QR
+              </button>
 
             </div>
 
@@ -2695,6 +2572,10 @@ underRaw
       </>
 
     )}
+
+  </div>
+
+)}
 
     <br />
 
@@ -2756,11 +2637,9 @@ const qrUrl =
 
       )}
 
-    </div>
 
   </div>
 
-)}
 
 {activeTab === 'Admin' && (
   <div className="glass panel">
