@@ -420,7 +420,7 @@ const foundMember =
         // STOP CAMERA FIRST
         // =========================
 
-        await scanner.clear()
+
 
         // =========================
         // SAVE ATTENDANCE
@@ -2566,6 +2566,41 @@ underRaw
           </div>
 
         )}
+
+        {scanResult && (
+
+  <div className="mt-4">
+
+    <button
+
+      onClick={() => {
+
+        setScanResult(null)
+
+        setScannerError('')
+
+        setActiveTab('scanner')
+
+      }}
+
+      className="
+        bg-blue-600
+        hover:bg-blue-700
+        text-white
+        px-4
+        py-2
+        rounded-lg
+        font-semibold
+      "
+    >
+
+      Scan Next QR
+
+    </button>
+
+  </div>
+
+)}
 
         {scannerError && (
           <p className="scanner-error">
