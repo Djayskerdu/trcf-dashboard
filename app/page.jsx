@@ -308,51 +308,62 @@ const scanner =
     false
   )
 
-let lastScan = 0
-
+let isScanning = false
 
 scanner.render(
 
   async (decodedText) => {
 
-    const now = Date.now()
+    // =========================
+    // PREVENT MULTIPLE SCANS
+    // =========================
 
-    if (now - lastScanRef.current < 3000) {
-      return
-    }
+    if (isScanning) return
 
-    lastScanRef.current = now
+    isScanning = true
 
     console.log("SCANNED QR:", decodedText)
 
     let memberId = decodedText
 
-    if (decodedText.startsWith('TRCF_MEMBER:')) {
+    // =========================
+    // QR FORMAT
+    // =========================
+
+    if (
+      decodedText.startsWith(
+        'TRCF_MEMBER:'
+      )
+    ) {
 
       memberId =
         decodedText.replace(
           'TRCF_MEMBER:',
           ''
         )
-
     }
 
-    /* =========================
-       EXTRACT MEMBER ID
-    ========================= */
+    // =========================
+    // URL FORMAT SUPPORT
+    // =========================
 
     try {
 
-      if (decodedText.includes('action=scan')) {
+      if (
+        decodedText.includes(
+          'action=scan'
+        )
+      ) {
 
-        const url = new URL(decodedText)
+        const url =
+          new URL(decodedText)
 
         memberId =
           url.searchParams.get('id') || ''
-
       }
 
     } catch (err) {
+
       console.log(err)
     }
 
@@ -366,9 +377,9 @@ scanner.render(
       memberId
     )
 
-    /* =========================
-       FIND MEMBER
-    ========================= */
+    // =========================
+    // FIND MEMBER
+    // =========================
 
     const foundMember =
       members
@@ -383,7 +394,6 @@ scanner.render(
             memberId
               .toLowerCase()
           )
-
         })
 
     console.log(
@@ -393,14 +403,22 @@ scanner.render(
 
     if (foundMember) {
 
-      /* =========================
-         SAVE TO ATTENDANCE
-      ========================= */
-
       try {
 
+        // =========================
+        // STOP CAMERA FIRST
+        // =========================
+
+        await scanner.clear()
+
+        // =========================
+        // SAVE ATTENDANCE
+        // =========================
+
         await fetch(
+
           `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`,
+
           {
             method: 'GET',
           }
@@ -409,7 +427,6 @@ scanner.render(
       } catch (err) {
 
         console.log(err)
-
       }
 
       setScanResult({
@@ -439,8 +456,17 @@ scanner.render(
       setScannerError(
         `Member not found: ${memberId}`
       )
-
     }
+
+    // =========================
+    // ALLOW NEXT SCAN
+    // =========================
+
+    setTimeout(() => {
+
+      isScanning = false
+
+    }, 3000)
 
   },
 
@@ -448,10 +474,11 @@ scanner.render(
 
 )
 
-  return () => {
-    scanner.clear().catch(() => {})
-  }
+return () => {
 
+  scanner.clear().catch(() => {})
+
+}
 }, [activeTab, members])
 
 
