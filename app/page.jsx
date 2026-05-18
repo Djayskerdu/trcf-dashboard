@@ -263,19 +263,61 @@ decodedText
 
       if (foundMember) {
 
-        setScanResult({
-          MemberID: foundMember[0],
-          FullName: foundMember[1],
-          Age: foundMember[2],
-          Gender: foundMember[3],
-          FirstTimer: foundMember[4],
-          Contact: foundMember[5],
-          LGLeader: foundMember[6],
-        })
+  fetch(API_URL, {
 
-        setScannerError('')
+    method: 'POST',
 
-      } else {
+    mode: 'no-cors',
+
+    headers: {
+      'Content-Type': 'application/json',
+    },
+
+    body: JSON.stringify({
+
+      action: 'attendance',
+
+      date: new Date().toISOString(),
+
+      theme: '',
+
+      fullName: foundMember[1],
+
+      age: foundMember[2],
+
+      gender: foundMember[3],
+
+      firstTimer: foundMember[4],
+
+      contact: foundMember[5],
+
+      lgLeader: foundMember[6],
+
+    }),
+
+  })
+
+  setScanResult({
+
+    MemberID: foundMember[0],
+
+    FullName: foundMember[1],
+
+    Age: foundMember[2],
+
+    Gender: foundMember[3],
+
+    FirstTimer: foundMember[4],
+
+    Contact: foundMember[5],
+
+    LGLeader: foundMember[6],
+
+  })
+
+  setScannerError('')
+
+} else {
 
         setScanResult(null)
 
@@ -2316,8 +2358,11 @@ underRaw
 
           if (!qrMemberId) return
 
-          const qrUrl =
-            `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrMemberId)}`
+          const scanUrl =
+  `${API_URL}?action=scan&id=${encodeURIComponent(qrMemberId)}`
+
+const qrUrl =
+  `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(scanUrl)}`
 
           setGeneratedQR(qrUrl)
 
