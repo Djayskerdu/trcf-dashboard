@@ -295,7 +295,7 @@ const [scannerError, setScannerError] =
     new Html5QrcodeScanner(
       'reader',
       {
-        fps: 10,
+        fps: 3,
         qrbox: 250,
       },
       false
@@ -309,6 +309,9 @@ scanner.render(
 
    let memberId = decodedText
 
+   if (isScanning) return
+
+  
 if (decodedText.startsWith('TRCF_MEMBER:')) {
 
   memberId =
@@ -416,10 +419,14 @@ if (decodedText.startsWith('TRCF_MEMBER:')) {
         `Member not found: ${memberId}`
       )
     }
+    setTimeout(() => {
+      isScanning = false
+    }, 2000)
   },
 
   () => {}
 )
+
 
   return () => {
     scanner.clear().catch(() => {})
