@@ -31,6 +31,7 @@ import {
 
 import { useRef } from 'react'
 
+const scannerRef = useRef(null)
 
 const API_URL =
   'https://script.google.com/macros/s/AKfycbyOrJ6PAmXP9jxNfaLA8Mnfzl0z8eZYm-4lbkV7XGFDCYJqqG06hTtSt7bYj-vql50/exec'
@@ -288,115 +289,119 @@ const [scannerError, setScannerError] =
   const [isScanning, setIsScanning] = useState(false)
   
   useEffect(() => {
+
   if (activeTab !== 'QR Scan') return
 
   const isInstalled =
-    window.matchMedia('(display-mode: standalone)').matches
+    window.matchMedia(
+      '(display-mode: standalone)'
+    ).matches
 
   if (!isInstalled) return
 
   const scanner = new Html5QrcodeScanner(
-    'reader',
-    { fps: 10, qrbox: 250 },
-    false
+  'reader',
+  { fps: 10, qrbox: 250 },
+  false
+)
+
+scannerRef.current = scanner
+
+const isScanningRef = { current: false }
+
+const playBeep = () => {
+  const audio = new Audio(
+    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
   )
+  audio.play().catch(() => {})
+}
 
-  useEffect(() => {
-  const unlockAudio = () => {
-    const audio = new Audio()
-    audio.play().catch(() => {})
-  }
+scanner.render(
+  async (decodedText) => {
 
-  window.addEventListener('click', unlockAudio, { once: true })
+    // 🚫 BLOCK MULTIPLE FAST SCANS
+    if (isScanningRef.current) return
+    isScanningRef.current = true
 
-  return () => window.removeEventListener('click', unlockAudio)
-}, [])
+    console.log("SCANNED QR:", decodedText)
 
-  scannerRef.current = scanner
+    let memberId = decodedText
 
-  const playBeep = () => {
-    const audio = new Audio(
-      "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-    )
-    audio.volume = 1
-    audio.play().catch(() => {
-      console.log("Audio blocked by browser")
-    })
-  }
+    if (decodedText.startsWith('TRCF_MEMBER:')) {
+      memberId = decodedText.replace('TRCF_MEMBER:', '')
+    }
 
-  scanner.render(
-    async (decodedText) => {
-      if (isScanningRef.current) return
-      isScanningRef.current = true
-
-      let memberId = decodedText
-
-      if (decodedText.startsWith('TRCF_MEMBER:')) {
-        memberId = decodedText.replace('TRCF_MEMBER:', '')
+    try {
+      if (decodedText.includes('action=scan')) {
+        const url = new URL(decodedText)
+        memberId = url.searchParams.get('id') || ''
       }
+    } catch (err) {
+      console.log(err)
+    }
+
+    memberId = memberId.toString().trim()
+
+    console.log("EXTRACTED MEMBER ID:", memberId)
+
+    const foundMember = members
+      .slice(1)
+      .find((m) =>
+        m[0]?.toString().trim().toLowerCase() === memberId.toLowerCase()
+      )
+
+    console.log("FOUND MEMBER:", foundMember)
+
+    if (foundMember) {
+
+      playBeep()
+
+      scannerRef.current?.pause?.()
+
+      setScanResult({
+        MemberID: foundMember[0],
+        FullName: foundMember[1],
+        Age: foundMember[2],
+        Gender: foundMember[3],
+        FirstTimer: foundMember[4],
+        Contact: foundMember[5],
+        LGLeader: foundMember[6],
+      })
+
+      setScannerError('')
 
       try {
-        const url = new URL(decodedText)
-        memberId = url.searchParams.get('id') || memberId
-      } catch {}
-
-      memberId = memberId.toString().trim().toLowerCase()
-
-      console.log("SCAN RAW:", decodedText)
-      console.log("EXTRACTED ID:", memberId)
-
-      const foundMember = members
-        .slice(1)
-        .find((m) =>
-          (m[0] || '').toString().trim().toLowerCase() === memberId
+        // 🚨 ONLY ONE FETCH (this was duplicated before)
+        await fetch(
+          `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`,
+          { method: 'GET' }
         )
-
-      console.log("FOUND:", foundMember)
-
-      if (foundMember) {
-        playBeep()
-
-        scanner.pause?.()
-
-        setScanResult({
-          MemberID: foundMember[0],
-          FullName: foundMember[1],
-          Age: foundMember[2],
-          Gender: foundMember[3],
-          FirstTimer: foundMember[4],
-          Contact: foundMember[5],
-          LGLeader: foundMember[6],
-        })
-
-        setScannerError('')
-
-        try {
-          await fetch(
-            `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`,
-            { method: 'GET' }
-          )
-        } catch (err) {
-          console.log(err)
-        }
-
-      } else {
-        setScanResult(null)
-        setScannerError(`Member not found: ${memberId}`)
+      } catch (err) {
+        console.log(err)
       }
 
-      setTimeout(() => {
-        isScanningRef.current = false
-      }, 1500)
-    },
-    (err) => {
-      console.log("SCAN ERROR:", err)
+    } else {
+
+      setScanResult(null)
+      setScannerError(`Member not found: ${memberId}`)
     }
-  )
+
+    // 🧊 allow next scan ONLY after UI action
+    setTimeout(() => {
+      isScanningRef.current = false
+    }, 1500)
+
+  },
+  () => {}
+)
 
   return () => {
     scanner.clear().catch(() => {})
   }
+
 }, [activeTab, members])
+
+
 
   /* ================= FETCH ================= */
 
@@ -2479,16 +2484,12 @@ underRaw
         <button
   className="reset-btn"
   onClick={() => {
+    scannerRef.current?.resume?.()
     setScanResult(null)
     setScannerError('')
-    isScanningRef.current = false
-
-    scannerRef.current?.clear().then(() => {
-      scannerRef.current = null
-    })
   }}
 >
-  Restart Scanner 🔁
+  Scan Next Member 🔁
 </button>
 
       </>
