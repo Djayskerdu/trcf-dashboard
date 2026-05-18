@@ -1756,11 +1756,56 @@ font-size: 14px;
 
 /* ================= 3 CALENDAR LAYOUT ================= */
 
+/* =========================
+   DESKTOP CALENDAR LAYOUT
+========================= */
+
+.calendar-slider-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  overflow: hidden;
+}
+
 .triple-calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-top: 20px;
+
+  display: flex;
+  gap: 18px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-behavior: smooth;
+
+  flex: 1;
+
+  padding-bottom: 6px;
+}
+
+/* Optional smooth scrollbar */
+.triple-calendar-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.triple-calendar-grid::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.15);
+  border-radius: 999px;
+}
+
+/* Calendar card */
+.mini-calendar-box {
+
+  flex: 0 0 360px;
+
+  width: 360px;
+
+  min-width: 360px;
+}
+
+.react-calendar {
+  width: 100% !important;
 }
 
 .mini-calendar-box {
@@ -2401,4 +2446,182 @@ font-size: 14px;
   border-radius: 18px;
   background: white;
   padding: 10px;
+}
+
+/* =========================
+   MOBILE EVENTS FIX
+========================= */
+
+.single-calendar-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+
+  .calendar-slider-wrapper {
+    gap: 10px;
+    align-items: center;
+  }
+
+  .calendar-side-btn {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 12px;
+    font-size: 18px;
+  }
+
+  .mini-calendar-box {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .react-calendar {
+    width: 100% !important;
+    border-radius: 20px;
+    padding: 10px;
+  }
+
+  .react-calendar__tile {
+    height: 58px;
+    font-size: 14px;
+  }
+
+  .calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .calendar-filter-group {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+
+  .calendar-filter-group select {
+    flex: 1;
+  }
+
+}
+
+/* =========================
+   MOBILE EVENT POPUP
+========================= */
+
+@media (max-width: 768px) {
+
+  .event-popup-layout {
+    width: 95vw !important;
+    height: 90vh;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .event-popup-left,
+  .event-popup-middle,
+  .event-popup-right {
+    width: 100% !important;
+  }
+
+  .event-popup-middle {
+    max-height: unset;
+    overflow: visible;
+  }
+
+  .event-participant-scroll {
+    max-height: unset;
+    overflow: visible;
+  }
+
+  .event-info-list {
+    grid-template-columns: 1fr;
+  }
+
+  .event-info-card {
+    width: 100%;
+  }
+
+  .event-close-btn {
+    position: sticky;
+    top: 0;
+    right: 0;
+    margin-left: auto;
+    z-index: 10;
+  }
+
+  .popup-member-card {
+    padding: 14px;
+  }
+
+  .popup-member-top h4 {
+    font-size: 15px;
+  }
+
+}
+
+/* Prevent horizontal overflow */
+
+.dashboard {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.content {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.calendar-panel {
+  width: 100%;
+  overflow: hidden;
+}
+
+.calendar-slider-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  overflow: hidden;
+}
+
+.triple-calendar-grid {
+  flex: 1;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 16px;
+
+  min-width: 0;
+}
+
+.mini-calendar-box {
+  min-width: 0;
+  width: 100%;
+}
+
+.react-calendar {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  width: 270px;
+  min-width: 270px;
+}
+
+.calendar-side-btn {
+  flex-shrink: 0;
+  z-index: 5;
 }

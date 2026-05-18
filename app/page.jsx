@@ -192,6 +192,26 @@ const philippineHolidays = [
   },
 ]
 
+const [isMobile, setIsMobile] = useState(false)
+
+useEffect(() => {
+
+  const checkMobile = () => {
+    setIsMobile(window.innerWidth <= 768)
+  }
+
+  checkMobile()
+
+  window.addEventListener('resize', checkMobile)
+
+  return () =>
+    window.removeEventListener(
+      'resize',
+      checkMobile
+    )
+
+}, [])
+
   const [selectedCalendarDate, setSelectedCalendarDate] =
   useState(new Date())
 
@@ -1352,9 +1372,15 @@ const financeChartData = useMemo(() => {
       </button>
 
       {/* CALENDARS */}
-      <div className="triple-calendar-grid">
+      <div
+  className={
+    isMobile
+      ? 'single-calendar-grid'
+      : 'triple-calendar-grid'
+  }
+>
 
-        {[-1, 0, 1].map((offset, index) => {
+        {(isMobile ? [0] : [-1, 0, 1]).map((offset, index) => {
 
           const calendarDate = new Date(
   calendarYear,
