@@ -973,7 +973,7 @@ const financeChartData = useMemo(() => {
 
     // ONLY SHOW ADMIN
     // IF LEADER OR ADMIN
-    ...(isLeader || isAdmin
+    ...(isLeader
       ? [{
           name: 'Admin',
           icon: <Shield size={18} />,
