@@ -1268,7 +1268,154 @@ const financeChartData = useMemo(() => {
   )
         )}
 
-        
+{/* ATTENDANCE */}
+{activeTab === 'Attendance' && (
+
+  <div className="glass panel attendance-print">
+
+    <div className="panel-header">
+
+      <div>
+        <h3>Attendance Records</h3>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: '10px',
+          alignItems: 'center',
+          flexWrap: 'wrap'
+        }}
+      >
+
+        <div className="event-stat-box blue-stat">
+
+          <span>
+            Total Participants
+          </span>
+
+          <h3>
+            {filteredAttendance.length}
+          </h3>
+
+        </div>
+
+        <div className="event-stat-box green-stat">
+
+          <span>
+            First Timers
+          </span>
+
+          <h3>
+            {
+              filteredAttendance.filter(
+                (row) =>
+                  row[5]
+                    ?.toString()
+                    .toLowerCase() ===
+                  'yes'
+              ).length
+            }
+          </h3>
+
+        </div>
+
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) =>
+            setStartDate(
+              e.target.value
+            )
+          }
+          className="table-date no-print"
+        />
+
+        <button
+          className="reset-btn no-print"
+          onClick={() => window.print()}
+        >
+          Print Records
+        </button>
+
+      </div>
+
+    </div>
+
+    <div className="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Date</th>
+            <th>Theme</th>
+            <th>Full Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>First Timer</th>
+            <th>Email</th>
+            <th>LG Leader</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {filteredAttendance.length > 0 ? (
+
+            filteredAttendance.map(
+              (row, i) => (
+
+                <tr key={i}>
+
+                  <td>
+                    {displayDate(row[0])}
+                  </td>
+
+                  <td>{row[1]}</td>
+
+                  <td>{row[2]}</td>
+
+                  <td>{row[3]}</td>
+
+                  <td>{row[4]}</td>
+
+                  <td>{row[5]}</td>
+
+                  <td>{row[6]}</td>
+
+                  <td>{row[8]}</td>
+
+                </tr>
+
+              )
+            )
+
+          ) : (
+
+            <tr>
+
+              <td
+                colSpan="8"
+                className="empty-state"
+              >
+                No attendance records found.
+              </td>
+
+            </tr>
+
+          )}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+)}
 
 {/* EVENTS */}
 {activeTab === 'Events' && (
