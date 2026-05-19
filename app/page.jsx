@@ -3198,7 +3198,7 @@ underRaw
                             wordBreak: 'break-word',
                           }}
                         >
-                          {(() => {
+{(() => {
 
   const action =
     (h[2] || '')
@@ -3211,19 +3211,28 @@ underRaw
   const cell =
     h[4] || ''
 
+  // EXTRACT ROW NUMBER
+  const rowMatch =
+    cell.match(/\d+/)
+
+  const row =
+    rowMatch
+      ? rowMatch[0]
+      : ''
+
   if (action === 'ADD') {
-    return `Added ${sheet} ${cell}`
+    return `Added ${sheet} Row ${row}`
   }
 
   if (action === 'EDIT') {
-    return `Edited ${sheet} ${cell}`
+    return `Edited ${sheet} Row ${row}`
   }
 
   if (action === 'DELETE') {
-    return `Deleted ${sheet} ${cell}`
+    return `Deleted ${sheet} Row ${row}`
   }
 
-  return cell
+  return `${sheet} Row ${row}`
 
 })()}
                         </td>
