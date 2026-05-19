@@ -964,7 +964,7 @@ const financeChartData = useMemo(() => {
 
     // ONLY SHOW QR SCAN
     // IF ADMIN
-    ...(isAdmin
+    ...(isLeader || isAdmin
       ? [{
           name: 'QR Scan',
           icon: <QrCode size={18} />,
@@ -2529,7 +2529,7 @@ underRaw
 {/* QR SCANNER */}
 {activeTab === 'QR Scan' && (
 
-  !isAdmin ? (
+  !(isLeader || isAdmin) ? (
 
     <div className="glass panel">
 
