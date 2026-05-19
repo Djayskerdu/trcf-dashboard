@@ -1269,139 +1269,182 @@ const financeChartData = useMemo(() => {
         )}
 
         {/* ATTENDANCE */}
-        {activeTab === 'Attendance' && (
+{activeTab === 'Attendance' && (
 
-          <div className="glass panel">
+  <div className="glass panel print-section">
 
-            <div className="panel-header">
+    <div className="panel-header">
 
-              <div>
-                <h3>Attendance Records</h3>
-              </div>
+      <div>
 
-              <div className="event-stats">
+        <h3>Attendance Records</h3>
 
-                <div className="event-stat-box blue-stat">
-                  <span>
-                    Total Participants
-                  </span>
+        <p>
+          TRCF Youth Jam Database
+        </p>
 
-                  <h3>
-                    {filteredAttendance.length}
-                  </h3>
-                </div>
+      </div>
 
-                <div className="event-stat-box green-stat">
+      <div className="event-stats">
 
-                  <span>First Timers</span>
+        <div className="event-stat-box blue-stat">
 
-                  <h3>
-                    {
-                      filteredAttendance.filter(
-                        (row) =>
-                          row[5]
-                            ?.toString()
-                            .toLowerCase() ===
-                          'yes'
-                      ).length
-                    }
-                  </h3>
+          <span>
+            Total Participants
+          </span>
 
-                </div>
+          <h3>
+            {filteredAttendance.length}
+          </h3>
 
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) =>
-                    setStartDate(
-                      e.target.value
-                    )
-                  }
-                  className="table-date"
-                />
+        </div>
 
-              </div>
+        <div className="event-stat-box green-stat">
 
-            </div>
+          <span>First Timers</span>
 
-            <div className="table-wrapper">
+          <h3>
+            {
+              filteredAttendance.filter(
+                (row) =>
+                  row[5]
+                    ?.toString()
+                    .toLowerCase() ===
+                  'yes'
+              ).length
+            }
+          </h3>
 
-              <table>
+        </div>
 
-                <thead>
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) =>
+            setStartDate(
+              e.target.value
+            )
+          }
+          className="table-date no-print"
+        />
 
-                  <tr>
-                    <th>Date</th>
-                    <th>Theme</th>
-                    <th>Full Name</th>
-                    <th>Age</th>
-                    <th>Gender</th>
-                    <th>First Timer</th>
-                    <th>Email</th>
-                    <th>LG Leader</th>
-                  </tr>
+        {/* PRINT BUTTON */}
 
-                </thead>
+        <button
+          className="reset-btn no-print"
+          onClick={() => window.print()}
+        >
+          Print Records
+        </button>
 
-                <tbody>
+      </div>
 
-                  {filteredAttendance.length >
-                  0 ? (
+    </div>
 
-                    filteredAttendance.map(
-                      (row, i) => (
+    {/* PRINT HEADER */}
 
-                        <tr key={i}>
+    <div
+      style={{
+        marginBottom: '20px'
+      }}
+    >
 
-                          <td>
-                            {displayDate(
-                              row[0]
-                            )}
-                          </td>
+      <h2>
+        TRCF Youth Jam Attendance Report
+      </h2>
 
-                          <td>{row[1]}</td>
+      <p>
+        Generated:
+        {' '}
+        {new Date().toLocaleString()}
+      </p>
 
-                          <td>{row[2]}</td>
+      {startDate && (
+        <p>
+          Filtered Date:
+          {' '}
+          {startDate}
+        </p>
+      )}
 
-                          <td>{row[3]}</td>
+    </div>
 
-                          <td>{row[4]}</td>
+    <div className="table-wrapper">
 
-                          <td>{row[5]}</td>
+      <table>
 
-                          <td>{row[6]}</td>
+        <thead>
 
-                          <td>{row[7]}</td>
+          <tr>
+            <th>Date</th>
+            <th>Theme</th>
+            <th>Full Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>First Timer</th>
+            <th>Email</th>
+            <th>LG Leader</th>
+          </tr>
 
-                        </tr>
+        </thead>
 
-                      )
-                    )
+        <tbody>
 
-                  ) : (
+          {filteredAttendance.length > 0 ? (
 
-                    <tr>
+            filteredAttendance.map(
+              (row, i) => (
 
-                      <td
-                        colSpan="8"
-                        className="empty-state"
-                      >
-                        No attendance records
-                        found.
-                      </td>
+                <tr key={i}>
 
-                    </tr>
+                  <td>
+                    {displayDate(
+                      row[0]
+                    )}
+                  </td>
 
-                  )}
+                  <td>{row[1]}</td>
 
-                </tbody>
+                  <td>{row[2]}</td>
 
-              </table>
+                  <td>{row[3]}</td>
 
-            </div>
+                  <td>{row[4]}</td>
 
-          </div>
-        )}
+                  <td>{row[5]}</td>
+
+                  <td>{row[6]}</td>
+
+                  <td>{row[7]}</td>
+
+                </tr>
+
+              )
+            )
+
+          ) : (
+
+            <tr>
+
+              <td
+                colSpan="8"
+                className="empty-state"
+              >
+                No attendance records found.
+              </td>
+
+            </tr>
+
+          )}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+)}
 
 {/* EVENTS */}
 {activeTab === 'Events' && (
@@ -2439,7 +2482,7 @@ underRaw
         )}
         
 
-  {/* FINANCE */}
+{/* FINANCE */}
 {activeTab === 'Finance' && (
 
   !(isLeader || isAdmin) ? (
@@ -2461,124 +2504,284 @@ underRaw
 
   ) : (
 
-  <div className="finance-wrapper">
+    <div className="finance-wrapper print-section">
 
-    {/* TOTAL GIVING CARD */}
-    {(() => {
-      const filteredFinance = finance.filter((f) => {
+      {(() => {
 
-      if (!f.date || !f.amount) return false
+        const filteredFinance = finance.filter((f) => {
 
-      const date = new Date(f.date)
-      if (isNaN(date)) return false
+          if (!f.date || !f.amount) return false
 
-      const formatted = formatDate(date)
+          const date = new Date(f.date)
 
-      if (startDate && formatted < startDate) return false
-      if (endDate && formatted > endDate) return false
+          if (isNaN(date)) return false
 
-      return true
-    })
+          const formatted = formatDate(date)
 
-      const totalGiving = filteredFinance.reduce(
-        (sum, f) =>
-          sum +
-          Number(
-            String(f.amount || 0).replace(/,/g, '')
-          ),
-        0
-      )
+          if (
+            startDate &&
+            formatted < startDate
+          ) return false
 
-      return (
-        <>
-          <div className="stats-grid">
-            <StatCard
-              title="Total Giving"
-              value={`₱${totalGiving.toLocaleString()}.00`}
-              color="blue"
-            />
-          </div>
+          if (
+            endDate &&
+            formatted > endDate
+          ) return false
 
-          {/* FINANCE TABLE PANEL */}
-          <div className="glass panel finance-panel">
-            <h3>Finance Records</h3>
+          return true
 
-            <div className="finance-filter-row">
+        })
 
-              <div className="date-input-group">
-                <label>From Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) =>
-                    setStartDate(e.target.value)
-                  }
-                />
-              </div>
+        const totalGiving =
+          filteredFinance.reduce(
+            (sum, f) =>
+              sum +
+              Number(
+                String(
+                  f.amount || 0
+                ).replace(/,/g, '')
+              ),
+            0
+          )
 
-              <div className="date-input-group">
-                <label>To Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) =>
-                    setEndDate(e.target.value)
-                  }
-                />
-              </div>
+        return (
 
-              <button
-                className="finance-reset-btn"
-                onClick={() => {
-                  setStartDate('')
-                  setEndDate('')
+          <>
+
+            {/* TOTAL CARD */}
+
+            <div className="stats-grid">
+
+              <StatCard
+                title="Total Giving"
+                value={`₱${totalGiving.toLocaleString()}.00`}
+                color="blue"
+              />
+
+            </div>
+
+            {/* PANEL */}
+
+            <div className="glass panel finance-panel">
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '12px',
                 }}
               >
-                Reset
-              </button>
 
-            </div>
+                <div>
 
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Giving</th>
-                    <th>Amount</th>
-                    <th>Program</th>
-                  </tr>
-                </thead>
+                  <h3>
+                    Finance Records
+                  </h3>
 
-                <tbody>
-                  {filteredFinance.length > 0 ? (
-                    filteredFinance.map((f, i) => (
-                      <tr key={i}>
-                        <td>{displayDate(f.date)}</td>
-                        <td>{f.giving}</td>
-                        <td>₱{Number(f.amount).toLocaleString()}</td>
-                        <td>{f.program}</td>
-                      </tr>
-                    ))
-                  ) : (
+                  <p>
+                    TRCF Youth Jam Finance Report
+                  </p>
+
+                </div>
+
+                {/* PRINT BUTTON */}
+
+                <button
+                  className="finance-reset-btn no-print"
+                  onClick={() =>
+                    window.print()
+                  }
+                >
+                  Print Records
+                </button>
+
+              </div>
+
+              {/* PRINT HEADER */}
+
+              <div
+                style={{
+                  marginTop: '20px',
+                  marginBottom: '20px',
+                }}
+              >
+
+                <h2>
+                  Finance Report
+                </h2>
+
+                <p>
+                  Generated:
+                  {' '}
+                  {new Date().toLocaleString()}
+                </p>
+
+                {startDate && (
+                  <p>
+                    From:
+                    {' '}
+                    {startDate}
+                  </p>
+                )}
+
+                {endDate && (
+                  <p>
+                    To:
+                    {' '}
+                    {endDate}
+                  </p>
+                )}
+
+                <h3>
+                  Total Giving:
+                  {' '}
+                  ₱
+                  {totalGiving.toLocaleString()}
+                  .00
+                </h3>
+
+              </div>
+
+              {/* FILTERS */}
+
+              <div className="finance-filter-row no-print">
+
+                <div className="date-input-group">
+
+                  <label>
+                    From Date
+                  </label>
+
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) =>
+                      setStartDate(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                </div>
+
+                <div className="date-input-group">
+
+                  <label>
+                    To Date
+                  </label>
+
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) =>
+                      setEndDate(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                </div>
+
+                <button
+                  className="finance-reset-btn"
+                  onClick={() => {
+
+                    setStartDate('')
+                    setEndDate('')
+
+                  }}
+                >
+                  Reset
+                </button>
+
+              </div>
+
+              {/* TABLE */}
+
+              <div className="table-wrapper">
+
+                <table>
+
+                  <thead>
+
                     <tr>
-                      <td
-                        colSpan="4"
-                        className="empty-state"
-                      >
-                        No finance records found
-                      </td>
+                      <th>Date</th>
+                      <th>Giving</th>
+                      <th>Amount</th>
+                      <th>Program</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+
+                  </thead>
+
+                  <tbody>
+
+                    {filteredFinance.length > 0 ? (
+
+                      filteredFinance.map(
+                        (f, i) => (
+
+                          <tr key={i}>
+
+                            <td>
+                              {displayDate(
+                                f.date
+                              )}
+                            </td>
+
+                            <td>
+                              {f.giving}
+                            </td>
+
+                            <td>
+                              ₱
+                              {Number(
+                                f.amount
+                              ).toLocaleString()}
+                            </td>
+
+                            <td>
+                              {f.program}
+                            </td>
+
+                          </tr>
+
+                        )
+                      )
+
+                    ) : (
+
+                      <tr>
+
+                        <td
+                          colSpan="4"
+                          className="empty-state"
+                        >
+                          No finance records found
+                        </td>
+
+                      </tr>
+
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
             </div>
 
-          </div>
-        </>
-      )
-    })()}
-  </div>
+          </>
+
+        )
+
+      })()}
+
+    </div>
+
   )
 )}
 
