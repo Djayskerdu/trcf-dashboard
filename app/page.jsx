@@ -1310,7 +1310,7 @@ const financeChartData = useMemo(() => {
                     <th>Age</th>
                     <th>Gender</th>
                     <th>First Timer</th>
-                    <th>Contact</th>
+                    <th>Email</th>
                     <th>LG Leader</th>
                   </tr>
 
