@@ -2869,138 +2869,156 @@ underRaw
 
 {activeTab === 'Admin' && (
 
-  <div className="glass panel">
+  <>
 
-    {!isLeader ? (
+    {/* =========================
+       ADMIN CONTROL PANEL
+    ========================== */}
 
-      <h3>Access Denied (Leader Only)</h3>
+    <div className="glass panel">
 
-    ) : (
+      {!isLeader ? (
 
-      <>
+        <h3>Access Denied (Leader Only)</h3>
 
-        {/* HEADER */}
-        <div className="panel-header">
+      ) : (
 
-          <div>
+        <>
 
-            <h3>Admin Control Panel</h3>
+          <div className="panel-header">
 
-            <p className="attendance-count">
-              Total Users: {users.slice(1).length}
-            </p>
+            <div>
+
+              <h3>Admin Control Panel</h3>
+
+              <p className="attendance-count">
+                Total Users: {users.slice(1).length}
+              </p>
+
+            </div>
 
           </div>
 
-        </div>
+          <div className="table-wrapper">
 
-        {/* USER TABLE */}
-        <div className="table-wrapper">
+            <table>
 
-          <table>
+              <thead>
 
-            <thead>
+                <tr>
+                  <th>Select</th>
+                  <th>Name</th>
+                  <th>Gender</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                </tr>
 
-              <tr>
-                <th>Select</th>
-                <th>Name</th>
-                <th>Gender</th>
-                <th>Role</th>
-                <th>Status</th>
-              </tr>
+              </thead>
 
-            </thead>
+              <tbody>
 
-            <tbody>
+                {users.slice(1).map((u, i) => {
 
-              {users.slice(1).map((u, i) => {
+                  const id = u[3]
 
-                const id = u[3]
+                  return (
 
-                return (
+                    <tr key={i}>
 
-                  <tr key={i}>
+                      <td>
 
-                    <td>
+                        <input
+                          type="checkbox"
+                          onChange={(e) => {
 
-                      <input
-                        type="checkbox"
-                        onChange={(e) => {
+                            if (e.target.checked) {
 
-                          if (e.target.checked) {
+                              setSelectedUsers(prev => [
+                                ...prev,
+                                id
+                              ])
 
-                            setSelectedUsers(prev => [
-                              ...prev,
-                              id
-                            ])
+                            } else {
 
-                          } else {
+                              setSelectedUsers(prev =>
+                                prev.filter(x => x !== id)
+                              )
 
-                            setSelectedUsers(prev =>
-                              prev.filter(x => x !== id)
-                            )
+                            }
 
-                          }
+                          }}
+                        />
 
-                        }}
-                      />
+                      </td>
 
-                    </td>
+                      <td>{u[0]}</td>
+                      <td>{u[1]}</td>
+                      <td>{u[2]}</td>
+                      <td>{u[4]}</td>
 
-                    <td>{u[0]}</td>
-                    <td>{u[1]}</td>
-                    <td>{u[2]}</td>
-                    <td>{u[4]}</td>
+                    </tr>
 
-                  </tr>
+                  )
 
-                )
+                })}
 
-              })}
+              </tbody>
 
-            </tbody>
+            </table>
 
-          </table>
+          </div>
 
-        </div>
+          <br />
 
-        <br />
+          <button
+            className="reset-btn"
+            onClick={async () => {
 
-        {/* SEND BUTTON */}
-        <button
-          className="reset-btn"
-          onClick={async () => {
+              const ids = selectedUsers.join(",")
 
-            const ids = selectedUsers.join(",")
+              const url =
+                `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
 
-            const url =
-              `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
+              try {
 
-            try {
+                await fetch(url, {
+                  method: "GET",
+                  mode: "no-cors"
+                })
 
-              await fetch(url, {
-                method: "GET",
-                mode: "no-cors"
-              })
+                alert("✅ Notification sent!")
 
-              alert("✅ Notification sent!")
+              } catch (err) {
 
-            } catch (err) {
+                console.error(err)
 
-              console.error(err)
+                alert("❌ Failed")
 
-              alert("❌ Failed")
+              }
 
-            }
+            }}
+          >
+            Send Reminder
+          </button>
 
-          }}
-        >
-          Send Reminder
-        </button>
+        </>
 
-        {/* HISTORY LOGS */}
-        <br />
-        <br />
+      )}
+
+    </div>
+
+    {/* =========================
+       HISTORY LOGS PANEL
+    ========================== */}
+
+    {isLeader && (
+
+      <div
+        className="glass panel"
+        style={{
+          marginTop: '24px'
+        }}
+      >
 
         <div className="panel-header">
 
@@ -3039,37 +3057,106 @@ underRaw
                 history
                   .slice(1)
                   .reverse()
-                  .map((h, i) => (
+                  .map((h, i) => {
 
-                    <tr key={i}>
+                    const rawDate = h[0]
 
-                      <td>{h[0]}</td>
+                    const formattedDate =
+                      rawDate
+                        ? new Date(rawDate).toLocaleString(
+                            'en-PH',
+                            {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              second: '2-digit',
+                              hour12: true,
+                            }
+                          )
+                        : '-'
 
-                      <td>{h[1]}</td>
+                    const action =
+                      (h[2] || '')
+                        .toString()
+                        .toUpperCase()
 
-                      <td>
+                    return (
 
-                        <span
-                          className={`history-badge ${
-                            h[2] === 'ADD'
-                              ? 'green-stat'
-                              : h[2] === 'EDIT'
-                              ? 'blue-stat'
-                              : 'orange-stat'
-                          }`}
+                      <tr key={i}>
+
+                        <td>
+                          {formattedDate}
+                        </td>
+
+                        <td>
+                          {h[1] || '-'}
+                        </td>
+
+                        <td>
+
+                          <span
+                            className={`history-action ${
+                              action === 'ADD'
+                                ? 'history-add'
+                                : action === 'EDIT'
+                                ? 'history-edit'
+                                : action === 'DELETE'
+                                ? 'history-delete'
+                                : ''
+                            }`}
+                          >
+                            {action}
+                          </span>
+
+                        </td>
+
+                        <td>
+                          {h[3] || '-'}
+                        </td>
+
+                        <td
+                          style={{
+                            maxWidth: '350px',
+                            wordBreak: 'break-word',
+                          }}
                         >
-                          {h[2]}
-                        </span>
+                          {(() => {
 
-                      </td>
+  const action =
+    (h[2] || '')
+      .toString()
+      .toUpperCase()
 
-                      <td>{h[3]}</td>
+  const sheet =
+    h[3] || 'Unknown Sheet'
 
-                      <td>{h[4]}</td>
+  const cell =
+    h[4] || ''
 
-                    </tr>
+  if (action === 'ADD') {
+    return `Added ${sheet} ${cell}`
+  }
 
-                  ))
+  if (action === 'EDIT') {
+    return `Edited ${sheet} ${cell}`
+  }
+
+  if (action === 'DELETE') {
+    return `Deleted ${sheet} ${cell}`
+  }
+
+  return cell
+
+})()}
+                        </td>
+
+                      </tr>
+
+                    )
+
+                  })
 
               ) : (
 
@@ -3092,11 +3179,11 @@ underRaw
 
         </div>
 
-      </>
+      </div>
 
     )}
 
-  </div>
+  </>
 
 )}
       </section>
