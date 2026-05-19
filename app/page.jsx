@@ -2867,13 +2867,14 @@ underRaw
 
 )}
 
+
+{/* =========================
+    ADMIN CONTROL PANEL
+========================== */}
+
   {activeTab === 'Admin' && (
 
     <>
-
-      {/* =========================
-        ADMIN CONTROL PANEL
-      ========================== */}
 
       <div className="glass panel">
 
@@ -2981,20 +2982,32 @@ underRaw
 
                 try {
 
-                  await fetch(url, {
-                    method: "GET",
-                    mode: "no-cors"
-                  })
+  const res = await fetch(url, {
+    method: "GET"
+  })
 
-                  alert("✅ Notification sent!")
+  const data = await res.json()
 
-                } catch (err) {
+  console.log(data)
 
-                  console.error(err)
+  if (data.id || data.recipients > 0) {
 
-                  alert("❌ Failed")
+    alert("✅ Notification sent!")
 
-                }
+  } else {
+
+    alert("❌ Notification failed")
+
+    console.log(data)
+  }
+
+} catch (err) {
+
+  console.error(err)
+
+  alert("❌ Failed")
+
+}
 
               }}
             >
