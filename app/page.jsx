@@ -1264,6 +1264,7 @@ const financeChartData = useMemo(() => {
 
 </div>
 
+
           </>
   )
         )}
@@ -1271,7 +1272,7 @@ const financeChartData = useMemo(() => {
 {/* ATTENDANCE */}
 {activeTab === 'Attendance' && (
 
-  <div className="glass panel attendance-print">
+  <div className="glass panel">
 
     <div className="panel-header">
 
@@ -1279,32 +1280,19 @@ const financeChartData = useMemo(() => {
         <h3>Attendance Records</h3>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          alignItems: 'center',
-          flexWrap: 'wrap'
-        }}
-      >
+      <div className="event-stats">
 
         <div className="event-stat-box blue-stat">
-
-          <span>
-            Total Participants
-          </span>
+          <span>Total Participants</span>
 
           <h3>
             {filteredAttendance.length}
           </h3>
-
         </div>
 
         <div className="event-stat-box green-stat">
 
-          <span>
-            First Timers
-          </span>
+          <span>First Timers</span>
 
           <h3>
             {
@@ -1312,8 +1300,7 @@ const financeChartData = useMemo(() => {
                 (row) =>
                   row[5]
                     ?.toString()
-                    .toLowerCase() ===
-                  'yes'
+                    .toLowerCase() === 'yes'
               ).length
             }
           </h3>
@@ -1324,16 +1311,113 @@ const financeChartData = useMemo(() => {
           type="date"
           value={startDate}
           onChange={(e) =>
-            setStartDate(
-              e.target.value
-            )
+            setStartDate(e.target.value)
           }
-          className="table-date no-print"
+          className="table-date"
         />
 
+        {/* PRINT BUTTON */}
         <button
-          className="reset-btn no-print"
-          onClick={() => window.print()}
+          className="reset-btn"
+          onClick={() => {
+
+            const printWindow =
+              window.open('', '', 'width=1200,height=800')
+
+            const rows =
+              filteredAttendance.map(row => `
+                <tr>
+                  <td>${displayDate(row[0])}</td>
+                  <td>${row[1] || ''}</td>
+                  <td>${row[2] || ''}</td>
+                  <td>${row[3] || ''}</td>
+                  <td>${row[4] || ''}</td>
+                  <td>${row[5] || ''}</td>
+                  <td>${row[6] || ''}</td>
+                  <td>${row[7] || ''}</td>
+                </tr>
+              `).join('')
+
+            printWindow.document.write(`
+              <html>
+                <head>
+                  <title>
+                    Attendance Records
+                  </title>
+
+                  <style>
+
+                    body{
+                      font-family:Arial;
+                      padding:20px;
+                    }
+
+                    h2{
+                      text-align:center;
+                      margin-bottom:20px;
+                    }
+
+                    table{
+                      width:100%;
+                      border-collapse:collapse;
+                    }
+
+                    th,td{
+                      border:1px solid #000;
+                      padding:10px;
+                      text-align:left;
+                      font-size:14px;
+                    }
+
+                    th{
+                      background:#f2f2f2;
+                    }
+
+                  </style>
+
+                </head>
+
+                <body>
+
+                  <h2>
+                    TRCF Youth Jam Attendance Records
+                  </h2>
+
+                  <table>
+
+                    <thead>
+
+                      <tr>
+                        <th>Date</th>
+                        <th>Theme</th>
+                        <th>Full Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>First Timer</th>
+                        <th>Email</th>
+                        <th>LG Leader</th>
+                      </tr>
+
+                    </thead>
+
+                    <tbody>
+                      ${rows}
+                    </tbody>
+
+                  </table>
+
+                </body>
+
+              </html>
+            `)
+
+            printWindow.document.close()
+
+            printWindow.focus()
+
+            printWindow.print()
+
+          }}
         >
           Print Records
         </button>
@@ -1386,7 +1470,7 @@ const financeChartData = useMemo(() => {
 
                   <td>{row[6]}</td>
 
-                  <td>{row[8]}</td>
+                  <td>{row[7]}</td>
 
                 </tr>
 
@@ -1415,6 +1499,7 @@ const financeChartData = useMemo(() => {
     </div>
 
   </div>
+
 )}
 
 {/* EVENTS */}
@@ -2453,7 +2538,7 @@ underRaw
         )}
         
 
- {/* FINANCE */}
+{/* FINANCE */}
 {activeTab === 'Finance' && (
 
   !(isLeader || isAdmin) ? (
