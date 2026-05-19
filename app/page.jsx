@@ -2975,42 +2975,44 @@ underRaw
               className="reset-btn"
               onClick={async () => {
 
-                const ids = selectedUsers.join(",")
+  const ids = selectedUsers.join(",")
 
-                const url =
-                  `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
+  const url =
+    `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
 
-                try {
+  try {
 
-  const res = await fetch(url, {
-    method: "GET"
-  })
+    const res = await fetch(url, {
+      method: "GET"
+    })
 
-  const data = await res.json()
+    const data = await res.json()
 
-  console.log(data)
-
-  if (data.id || data.recipients > 0) {
-
-    alert("✅ Notification sent!")
-
-  } else {
-
-    alert("❌ Notification failed")
+    alert(JSON.stringify(data))
 
     console.log(data)
+
+    if (data.id || data.recipients > 0) {
+
+      alert("✅ Notification sent!")
+
+    } else {
+
+      alert("❌ Notification failed")
+
+    }
+
+  } catch (err) {
+
+    console.error(err)
+
+    alert("❌ Failed")
+
   }
 
-} catch (err) {
+}}
 
-  console.error(err)
-
-  alert("❌ Failed")
-
-}
-
-              }}
-            >
+>
               Send Reminder
             </button>
 
