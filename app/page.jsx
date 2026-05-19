@@ -936,10 +936,15 @@ const financeChartData = useMemo(() => {
       name: 'Homepage',
       icon: <Home size={18} />,
     },
-    {
-      name: 'Dashboard',
-      icon: <LayoutDashboard size={18} />,
-    },
+    // ONLY SHOW DASHBOARD
+    // IF LEADER OR ADMIN
+    ...(isLeader || isAdmin
+      ? [{
+          name: 'Dashboard',
+          icon: <LayoutDashboard size={18} />,
+        }]
+      : []),
+
     {
       name: 'Attendance',
       icon: <ClipboardList size={18} />,
@@ -1077,6 +1082,27 @@ const financeChartData = useMemo(() => {
 
         {/* DASHBOARD */}
         {activeTab === 'Dashboard' && (
+
+          !(isLeader || isAdmin) ? (
+
+    <div className="glass panel">
+
+      <h3>
+        Access Denied
+      </h3>
+
+      <p
+        style={{
+          marginTop: '10px',
+          opacity: 0.7,
+        }}
+      >
+        Only Leaders and Admins can access Follow Up.
+      </p>
+
+    </div>
+
+  ) : (
 
           <>
 
@@ -1239,6 +1265,7 @@ const financeChartData = useMemo(() => {
 </div>
 
           </>
+  )
         )}
 
         {/* ATTENDANCE */}
