@@ -1268,183 +1268,7 @@ const financeChartData = useMemo(() => {
   )
         )}
 
-        {/* ATTENDANCE */}
-{activeTab === 'Attendance' && (
-
-  <div className="glass panel print-section">
-
-    <div className="panel-header">
-
-      <div>
-
-        <h3>Attendance Records</h3>
-
-        <p>
-          TRCF Youth Jam Database
-        </p>
-
-      </div>
-
-      <div className="event-stats">
-
-        <div className="event-stat-box blue-stat">
-
-          <span>
-            Total Participants
-          </span>
-
-          <h3>
-            {filteredAttendance.length}
-          </h3>
-
-        </div>
-
-        <div className="event-stat-box green-stat">
-
-          <span>First Timers</span>
-
-          <h3>
-            {
-              filteredAttendance.filter(
-                (row) =>
-                  row[5]
-                    ?.toString()
-                    .toLowerCase() ===
-                  'yes'
-              ).length
-            }
-          </h3>
-
-        </div>
-
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) =>
-            setStartDate(
-              e.target.value
-            )
-          }
-          className="table-date no-print"
-        />
-
-        {/* PRINT BUTTON */}
-
-        <button
-          className="reset-btn no-print"
-          onClick={() => window.print()}
-        >
-          Print Records
-        </button>
-
-      </div>
-
-    </div>
-
-    {/* PRINT HEADER */}
-
-    <div
-      style={{
-        marginBottom: '20px'
-      }}
-    >
-
-      <h2>
-        TRCF Youth Jam Attendance Report
-      </h2>
-
-      <p>
-        Generated:
-        {' '}
-        {new Date().toLocaleString()}
-      </p>
-
-      {startDate && (
-        <p>
-          Filtered Date:
-          {' '}
-          {startDate}
-        </p>
-      )}
-
-    </div>
-
-    <div className="table-wrapper">
-
-      <table>
-
-        <thead>
-
-          <tr>
-            <th>Date</th>
-            <th>Theme</th>
-            <th>Full Name</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>First Timer</th>
-            <th>Email</th>
-            <th>LG Leader</th>
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          {filteredAttendance.length > 0 ? (
-
-            filteredAttendance.map(
-              (row, i) => (
-
-                <tr key={i}>
-
-                  <td>
-                    {displayDate(
-                      row[0]
-                    )}
-                  </td>
-
-                  <td>{row[1]}</td>
-
-                  <td>{row[2]}</td>
-
-                  <td>{row[3]}</td>
-
-                  <td>{row[4]}</td>
-
-                  <td>{row[5]}</td>
-
-                  <td>{row[6]}</td>
-
-                  <td>{row[7]}</td>
-
-                </tr>
-
-              )
-            )
-
-          ) : (
-
-            <tr>
-
-              <td
-                colSpan="8"
-                className="empty-state"
-              >
-                No attendance records found.
-              </td>
-
-            </tr>
-
-          )}
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </div>
-)}
+        
 
 {/* EVENTS */}
 {activeTab === 'Events' && (
@@ -2482,7 +2306,7 @@ underRaw
         )}
         
 
-{/* FINANCE */}
+ {/* FINANCE */}
 {activeTab === 'Finance' && (
 
   !(isLeader || isAdmin) ? (
@@ -2504,19 +2328,23 @@ underRaw
 
   ) : (
 
-    <div className="finance-wrapper print-section">
+    <div className="finance-wrapper finance-print">
 
       {(() => {
 
         const filteredFinance = finance.filter((f) => {
 
-          if (!f.date || !f.amount) return false
+          if (!f.date || !f.amount)
+            return false
 
-          const date = new Date(f.date)
+          const date =
+            new Date(f.date)
 
-          if (isNaN(date)) return false
+          if (isNaN(date))
+            return false
 
-          const formatted = formatDate(date)
+          const formatted =
+            formatDate(date)
 
           if (
             startDate &&
@@ -2548,8 +2376,6 @@ underRaw
 
           <>
 
-            {/* TOTAL CARD */}
-
             <div className="stats-grid">
 
               <StatCard
@@ -2560,19 +2386,10 @@ underRaw
 
             </div>
 
-            {/* PANEL */}
-
             <div className="glass panel finance-panel">
 
               <div
-                style={{
-                  display: 'flex',
-                  justifyContent:
-                    'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '12px',
-                }}
+                className="panel-header"
               >
 
                 <div>
@@ -2581,79 +2398,16 @@ underRaw
                     Finance Records
                   </h3>
 
-                  <p>
-                    TRCF Youth Jam Finance Report
-                  </p>
-
                 </div>
 
-                {/* PRINT BUTTON */}
-
-                <button
-                  className="finance-reset-btn no-print"
-                  onClick={() =>
-                    window.print()
-                  }
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center',
+                    flexWrap: 'wrap'
+                  }}
                 >
-                  Print Records
-                </button>
-
-              </div>
-
-              {/* PRINT HEADER */}
-
-              <div
-                style={{
-                  marginTop: '20px',
-                  marginBottom: '20px',
-                }}
-              >
-
-                <h2>
-                  Finance Report
-                </h2>
-
-                <p>
-                  Generated:
-                  {' '}
-                  {new Date().toLocaleString()}
-                </p>
-
-                {startDate && (
-                  <p>
-                    From:
-                    {' '}
-                    {startDate}
-                  </p>
-                )}
-
-                {endDate && (
-                  <p>
-                    To:
-                    {' '}
-                    {endDate}
-                  </p>
-                )}
-
-                <h3>
-                  Total Giving:
-                  {' '}
-                  ₱
-                  {totalGiving.toLocaleString()}
-                  .00
-                </h3>
-
-              </div>
-
-              {/* FILTERS */}
-
-              <div className="finance-filter-row no-print">
-
-                <div className="date-input-group">
-
-                  <label>
-                    From Date
-                  </label>
 
                   <input
                     type="date"
@@ -2663,15 +2417,8 @@ underRaw
                         e.target.value
                       )
                     }
+                    className="no-print"
                   />
-
-                </div>
-
-                <div className="date-input-group">
-
-                  <label>
-                    To Date
-                  </label>
 
                   <input
                     type="date"
@@ -2681,25 +2428,33 @@ underRaw
                         e.target.value
                       )
                     }
+                    className="no-print"
                   />
+
+                  <button
+                    className="finance-reset-btn no-print"
+                    onClick={() => {
+
+                      setStartDate('')
+                      setEndDate('')
+
+                    }}
+                  >
+                    Reset
+                  </button>
+
+                  <button
+                    className="finance-reset-btn no-print"
+                    onClick={() =>
+                      window.print()
+                    }
+                  >
+                    Print Records
+                  </button>
 
                 </div>
 
-                <button
-                  className="finance-reset-btn"
-                  onClick={() => {
-
-                    setStartDate('')
-                    setEndDate('')
-
-                  }}
-                >
-                  Reset
-                </button>
-
               </div>
-
-              {/* TABLE */}
 
               <div className="table-wrapper">
 
