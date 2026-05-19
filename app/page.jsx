@@ -2975,10 +2975,18 @@ underRaw
   className="reset-btn"
   onClick={async () => {
 
-    const ids = selectedUsers.join(",")
+    const selectedData = users
+  .slice(1)
+  .filter(u => selectedUsers.includes(u[3]))
+
+const ids =
+  selectedData.map(u => u[3]).join(",")
+
+const names =
+  selectedData.map(u => u[0]).join(",")
 
     const url =
-      `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
+  `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}&names=${encodeURIComponent(names)}`
 
     try {
 
