@@ -3026,6 +3026,60 @@ underRaw
 
             <h3>History Logs</h3>
 
+            <div
+  style={{
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center',
+    marginTop: '12px',
+    marginBottom: '18px',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+  }}
+>
+
+  <div className="date-input-group">
+
+    <label>From</label>
+
+    <input
+      type="date"
+      value={startDate}
+      onChange={(e) =>
+        setStartDate(e.target.value)
+      }
+    />
+
+  </div>
+
+  <div className="date-input-group">
+
+    <label>To</label>
+
+    <input
+      type="date"
+      value={endDate}
+      onChange={(e) =>
+        setEndDate(e.target.value)
+      }
+    />
+
+  </div>
+
+  <button
+    className="reset-btn"
+    onClick={() => {
+
+      setStartDate('')
+      setEndDate('')
+
+    }}
+  >
+    Reset
+  </button>
+
+</div>
+
             <p className="attendance-count">
               System Activity Tracker
             </p>
@@ -3055,9 +3109,31 @@ underRaw
               {history.length > 1 ? (
 
                 history
-                  .slice(1)
-                  .reverse()
-                  .map((h, i) => {
+  .slice(1)
+  .filter((h) => {
+
+    const logDate =
+      formatDate(h[0])
+
+    if (
+      startDate &&
+      logDate < startDate
+    ) {
+      return false
+    }
+
+    if (
+      endDate &&
+      logDate > endDate
+    ) {
+      return false
+    }
+
+    return true
+
+  })
+  .reverse()
+  .map((h, i) => {
 
                     const rawDate = h[0]
 
