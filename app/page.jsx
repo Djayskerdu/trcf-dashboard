@@ -1321,103 +1321,291 @@ const financeChartData = useMemo(() => {
           className="reset-btn"
           onClick={() => {
 
-            const printWindow =
-              window.open('', '', 'width=1200,height=800')
+  const totalParticipants =
+    filteredAttendance.length
 
-            const rows =
-              filteredAttendance.map(row => `
+  const firstTimers =
+    filteredAttendance.filter(
+      (row) =>
+        row[5]
+          ?.toString()
+          .toLowerCase() === 'yes'
+    ).length
+
+  const rows =
+    filteredAttendance.map(row => `
+
+      <tr>
+
+        <td>${displayDate(row[0])}</td>
+        <td>${row[1] || ''}</td>
+        <td>${row[2] || ''}</td>
+        <td>${row[3] || ''}</td>
+        <td>${row[4] || ''}</td>
+        <td>${row[5] || ''}</td>
+        <td>${row[6] || ''}</td>
+        <td>${row[8] || ''}</td>
+
+      </tr>
+
+    `).join('')
+
+  const printWindow =
+    window.open('', '', 'width=1400,height=900')
+
+  printWindow.document.write(`
+
+    <html>
+
+      <head>
+
+        <title>
+          Attendance Records
+        </title>
+
+        <style>
+
+          body {
+
+            font-family: Inter, Arial;
+            background: #f5f7fb;
+            padding: 40px;
+            color: #111827;
+
+          }
+
+          .finance-wrapper {
+
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+
+          }
+
+          .stats-grid {
+
+            display: grid;
+            grid-template-columns:
+              repeat(auto-fit, minmax(220px, 1fr));
+
+            gap: 18px;
+
+          }
+
+          .stat-card {
+
+            background: white;
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow:
+              0 8px 25px rgba(0,0,0,0.08);
+
+          }
+
+          .stat-card span {
+
+            display: block;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+
+          }
+
+          .stat-card h2 {
+
+            margin: 0;
+            font-size: 34px;
+            font-weight: 700;
+
+          }
+
+          .panel {
+
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow:
+              0 8px 25px rgba(0,0,0,0.08);
+
+          }
+
+          .panel-header {
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+
+          }
+
+          .panel-header h1 {
+
+            margin: 0;
+            font-size: 30px;
+
+          }
+
+          .panel-header p {
+
+            margin-top: 8px;
+            color: #6b7280;
+
+          }
+
+          table {
+
+            width: 100%;
+            border-collapse: collapse;
+
+          }
+
+          thead {
+
+            background: #111827;
+            color: white;
+
+          }
+
+          th {
+
+            padding: 14px;
+            text-align: left;
+            font-size: 14px;
+
+          }
+
+          td {
+
+            padding: 14px;
+            border-bottom:
+              1px solid #e5e7eb;
+
+            font-size: 14px;
+
+          }
+
+          tr:nth-child(even) {
+
+            background: #f9fafb;
+
+          }
+
+          @media print {
+
+            body {
+
+              background: white;
+              padding: 10px;
+
+            }
+
+            .panel,
+            .stat-card {
+
+              box-shadow: none;
+
+            }
+
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <div class="finance-wrapper">
+
+          <div class="stats-grid">
+
+            <div class="stat-card">
+
+              <span>
+                Total Participants
+              </span>
+
+              <h2>
+                ${totalParticipants}
+              </h2>
+
+            </div>
+
+            <div class="stat-card">
+
+              <span>
+                First Timers
+              </span>
+
+              <h2>
+                ${firstTimers}
+              </h2>
+
+            </div>
+
+          </div>
+
+          <div class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <h1>
+                  Attendance Records
+                </h1>
+
+                <p>
+                  TRCF Youth Jam Database
+                </p>
+
+              </div>
+
+            </div>
+
+            <table>
+
+              <thead>
+
                 <tr>
-                  <td>${displayDate(row[0])}</td>
-                  <td>${row[1] || ''}</td>
-                  <td>${row[2] || ''}</td>
-                  <td>${row[3] || ''}</td>
-                  <td>${row[4] || ''}</td>
-                  <td>${row[5] || ''}</td>
-                  <td>${row[6] || ''}</td>
-                  <td>${row[7] || ''}</td>
+
+                  <th>Date</th>
+                  <th>Theme</th>
+                  <th>Full Name</th>
+                  <th>Age</th>
+                  <th>Gender</th>
+                  <th>First Timer</th>
+                  <th>Email</th>
+                  <th>LG Leader</th>
+
                 </tr>
-              `).join('')
 
-            printWindow.document.write(`
-              <html>
-                <head>
-                  <title>
-                    Attendance Records
-                  </title>
+              </thead>
 
-                  <style>
+              <tbody>
 
-                    body{
-                      font-family:Arial;
-                      padding:20px;
-                    }
+                ${rows}
 
-                    h2{
-                      text-align:center;
-                      margin-bottom:20px;
-                    }
+              </tbody>
 
-                    table{
-                      width:100%;
-                      border-collapse:collapse;
-                    }
+            </table>
 
-                    th,td{
-                      border:1px solid #000;
-                      padding:10px;
-                      text-align:left;
-                      font-size:14px;
-                    }
+          </div>
 
-                    th{
-                      background:#f2f2f2;
-                    }
+        </div>
 
-                  </style>
+      </body>
 
-                </head>
+    </html>
 
-                <body>
+  `)
 
-                  <h2>
-                    TRCF Youth Jam Attendance Records
-                  </h2>
+  printWindow.document.close()
 
-                  <table>
+  printWindow.focus()
 
-                    <thead>
+  printWindow.print()
 
-                      <tr>
-                        <th>Date</th>
-                        <th>Theme</th>
-                        <th>Full Name</th>
-                        <th>Age</th>
-                        <th>Gender</th>
-                        <th>First Timer</th>
-                        <th>Email</th>
-                        <th>LG Leader</th>
-                      </tr>
-
-                    </thead>
-
-                    <tbody>
-                      ${rows}
-                    </tbody>
-
-                  </table>
-
-                </body>
-
-              </html>
-            `)
-
-            printWindow.document.close()
-
-            printWindow.focus()
-
-            printWindow.print()
-
-          }}
+}}
         >
           Print Records
         </button>
