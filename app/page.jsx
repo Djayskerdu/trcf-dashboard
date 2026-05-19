@@ -279,6 +279,7 @@ const [calendarDate, setCalendarDate] = useState(new Date())
   const [users, setUsers] = useState([])
 const [selectedUsers, setSelectedUsers] = useState([])
 const [isLeader, setIsLeader] = useState(false)
+const [isAdmin, setIsAdmin] = useState(false)
 const [scanResult, setScanResult] =
   useState(null)
 
