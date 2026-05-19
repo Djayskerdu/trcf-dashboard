@@ -300,6 +300,7 @@ const [calendarDate, setCalendarDate] = useState(new Date())
   const [users, setUsers] = useState([])
 const [selectedUsers, setSelectedUsers] = useState([])
 const [isLeader, setIsLeader] = useState(false)
+const [history, setHistory] = useState([])
 const [isAdmin, setIsAdmin] = useState(false)
 const [scanResult, setScanResult] =
   useState(null)
@@ -618,6 +619,9 @@ setLeaders(res.data.leaders || [])
 setFollowup(res.data.followup || [])
 setFinance(res.data.finance || [])
 setUsers(res.data.users || [])
+setHistory(
+  res.data.history || []
+)
 setMembers(res.data.members || [])
       setYouthGetLoud(
   res.data.youthgetloud || []
@@ -948,10 +952,14 @@ const financeChartData = useMemo(() => {
       name: 'Leaders',
       icon: <Users size={18} />,
     },
-    {
+    // ONLY SHOW FINANCE
+// IF LEADER OR ADMIN
+...(isLeader
+  ? [{
       name: 'Finance',
       icon: <HandCoins size={18} />,
-    },
+    }]
+  : []),
 
     // ONLY SHOW FOLLOWUP
     // IF LEADER OR ADMIN
@@ -2406,6 +2414,26 @@ underRaw
 
   {/* FINANCE */}
 {activeTab === 'Finance' && (
+
+  !(isLeader || isAdmin) ? (
+
+    <div className="glass panel">
+
+      <h3>Access Denied</h3>
+
+      <p
+        style={{
+          marginTop: '10px',
+          opacity: 0.7,
+        }}
+      >
+        Only Leaders and Admins can access Finance.
+      </p>
+
+    </div>
+
+  ) : (
+
   <div className="finance-wrapper">
 
     {/* TOTAL GIVING CARD */}
@@ -2524,6 +2552,7 @@ underRaw
       )
     })()}
   </div>
+  )
 )}
 
 {/* QR SCANNER */}
@@ -2839,17 +2868,39 @@ underRaw
 )}
 
 {activeTab === 'Admin' && (
+
   <div className="glass panel">
 
     {!isLeader ? (
-      <h3>Access Denied (Leader Only)</h3>
-    ) : (
-      <>
-        <h3>Send Notification Panel</h3>
 
+      <h3>Access Denied (Leader Only)</h3>
+
+    ) : (
+
+      <>
+
+        {/* HEADER */}
+        <div className="panel-header">
+
+          <div>
+
+            <h3>Admin Control Panel</h3>
+
+            <p className="attendance-count">
+              Total Users: {users.slice(1).length}
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* USER TABLE */}
         <div className="table-wrapper">
+
           <table>
+
             <thead>
+
               <tr>
                 <th>Select</th>
                 <th>Name</th>
@@ -2857,69 +2908,196 @@ underRaw
                 <th>Role</th>
                 <th>Status</th>
               </tr>
+
             </thead>
 
             <tbody>
+
               {users.slice(1).map((u, i) => {
+
                 const id = u[3]
 
                 return (
+
                   <tr key={i}>
+
                     <td>
+
                       <input
                         type="checkbox"
                         onChange={(e) => {
+
                           if (e.target.checked) {
-                            setSelectedUsers(prev => [...prev, id])
+
+                            setSelectedUsers(prev => [
+                              ...prev,
+                              id
+                            ])
+
                           } else {
+
                             setSelectedUsers(prev =>
                               prev.filter(x => x !== id)
                             )
+
                           }
+
                         }}
                       />
+
                     </td>
 
                     <td>{u[0]}</td>
                     <td>{u[1]}</td>
                     <td>{u[2]}</td>
                     <td>{u[4]}</td>
+
                   </tr>
+
                 )
+
               })}
+
             </tbody>
+
           </table>
+
         </div>
 
         <br />
 
-<button
-  className="reset-btn"
-  onClick={async () => {
-    const ids = selectedUsers.join(",")
+        {/* SEND BUTTON */}
+        <button
+          className="reset-btn"
+          onClick={async () => {
 
-    const url = `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
+            const ids = selectedUsers.join(",")
 
-    try {
-      await fetch(url, {
-        method: "GET",
-        mode: "no-cors"
-      })
+            const url =
+              `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
 
-      alert("Notification sent!")
-    } catch (err) {
-      console.error(err)
-      alert("Failed")
-    }
-  }}
->
-  Send Reminder
-</button>
+            try {
+
+              await fetch(url, {
+                method: "GET",
+                mode: "no-cors"
+              })
+
+              alert("✅ Notification sent!")
+
+            } catch (err) {
+
+              console.error(err)
+
+              alert("❌ Failed")
+
+            }
+
+          }}
+        >
+          Send Reminder
+        </button>
+
+        {/* HISTORY LOGS */}
+        <br />
+        <br />
+
+        <div className="panel-header">
+
+          <div>
+
+            <h3>History Logs</h3>
+
+            <p className="attendance-count">
+              System Activity Tracker
+            </p>
+
+          </div>
+
+        </div>
+
+        <div className="table-wrapper">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>Date & Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Sheet</th>
+                <th>Details</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {history.length > 1 ? (
+
+                history
+                  .slice(1)
+                  .reverse()
+                  .map((h, i) => (
+
+                    <tr key={i}>
+
+                      <td>{h[0]}</td>
+
+                      <td>{h[1]}</td>
+
+                      <td>
+
+                        <span
+                          className={`history-badge ${
+                            h[2] === 'ADD'
+                              ? 'green-stat'
+                              : h[2] === 'EDIT'
+                              ? 'blue-stat'
+                              : 'orange-stat'
+                          }`}
+                        >
+                          {h[2]}
+                        </span>
+
+                      </td>
+
+                      <td>{h[3]}</td>
+
+                      <td>{h[4]}</td>
+
+                    </tr>
+
+                  ))
+
+              ) : (
+
+                <tr>
+
+                  <td
+                    colSpan="5"
+                    className="empty-state"
+                  >
+                    No history logs found.
+                  </td>
+
+                </tr>
+
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </>
+
     )}
 
   </div>
+
 )}
       </section>
 
