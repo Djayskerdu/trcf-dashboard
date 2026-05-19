@@ -2867,410 +2867,355 @@ underRaw
 
 )}
 
-{activeTab === 'Admin' && (
+  {activeTab === 'Admin' && (
 
-  <>
+    <>
 
-    {/* =========================
-       ADMIN CONTROL PANEL
-    ========================== */}
+      {/* =========================
+        ADMIN CONTROL PANEL
+      ========================== */}
 
-    <div className="glass panel">
+      <div className="glass panel">
 
-      {!isLeader ? (
+        {!isLeader ? (
 
-        <h3>Access Denied (Leader Only)</h3>
+          <h3>Access Denied (Leader Only)</h3>
 
-      ) : (
+        ) : (
 
-        <>
+          <>
 
-          <div className="panel-header">
+            <div className="panel-header">
 
-            <div>
+              <div>
 
-              <h3>Admin Control Panel</h3>
+                <h3>Admin Control Panel</h3>
 
-              <p className="attendance-count">
-                Total Users: {users.slice(1).length}
-              </p>
+                <p className="attendance-count">
+                  Total Users: {users.slice(1).length}
+                </p>
+
+              </div>
 
             </div>
 
-          </div>
+            <div className="table-wrapper">
 
-          <div className="table-wrapper">
+              <table>
 
-            <table>
+                <thead>
 
-              <thead>
+                  <tr>
+                    <th>Select</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                  </tr>
 
-                <tr>
-                  <th>Select</th>
-                  <th>Name</th>
-                  <th>Gender</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                </tr>
+                </thead>
 
-              </thead>
+                <tbody>
 
-              <tbody>
+                  {users.slice(1).map((u, i) => {
 
-                {users.slice(1).map((u, i) => {
-
-                  const id = u[3]
-
-                  return (
-
-                    <tr key={i}>
-
-                      <td>
-
-                        <input
-                          type="checkbox"
-                          onChange={(e) => {
-
-                            if (e.target.checked) {
-
-                              setSelectedUsers(prev => [
-                                ...prev,
-                                id
-                              ])
-
-                            } else {
-
-                              setSelectedUsers(prev =>
-                                prev.filter(x => x !== id)
-                              )
-
-                            }
-
-                          }}
-                        />
-
-                      </td>
-
-                      <td>{u[0]}</td>
-                      <td>{u[1]}</td>
-                      <td>{u[2]}</td>
-                      <td>{u[4]}</td>
-
-                    </tr>
-
-                  )
-
-                })}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-          <br />
-
-          <button
-            className="reset-btn"
-            onClick={async () => {
-
-              const ids = selectedUsers.join(",")
-
-              const url =
-                `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
-
-              try {
-
-                await fetch(url, {
-                  method: "GET",
-                  mode: "no-cors"
-                })
-
-                alert("✅ Notification sent!")
-
-              } catch (err) {
-
-                console.error(err)
-
-                alert("❌ Failed")
-
-              }
-
-            }}
-          >
-            Send Reminder
-          </button>
-
-        </>
-
-      )}
-
-    </div>
-
-    {/* =========================
-       HISTORY LOGS PANEL
-    ========================== */}
-
-    {isLeader && (
-
-      <div
-        className="glass panel"
-        style={{
-          marginTop: '24px'
-        }}
-      >
-
-        <div className="panel-header">
-
-          <div>
-
-            <h3>History Logs</h3>
-
-            <div
-  style={{
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center',
-    marginTop: '12px',
-    marginBottom: '18px',
-    justifyContent: 'flex-end',
-    flexWrap: 'wrap',
-  }}
->
-
-  <div className="date-input-group">
-
-    <label>From</label>
-
-    <input
-      type="date"
-      value={startDate}
-      onChange={(e) =>
-        setStartDate(e.target.value)
-      }
-    />
-
-  </div>
-
-  <div className="date-input-group">
-
-    <label>To</label>
-
-    <input
-      type="date"
-      value={endDate}
-      onChange={(e) =>
-        setEndDate(e.target.value)
-      }
-    />
-
-  </div>
-
-  <button
-    className="reset-btn"
-    onClick={() => {
-
-      setStartDate('')
-      setEndDate('')
-
-    }}
-  >
-    Reset
-  </button>
-
-</div>
-
-            <p className="attendance-count">
-              System Activity Tracker
-            </p>
-
-          </div>
-
-        </div>
-
-        <div className="table-wrapper">
-
-          <table>
-
-            <thead>
-
-              <tr>
-                <th>Date & Time</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Sheet</th>
-                <th>Details</th>
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {history.length > 1 ? (
-
-                history
-  .slice(1)
-  .filter((h) => {
-
-    const logDate =
-      formatDate(h[0])
-
-    if (
-      startDate &&
-      logDate < startDate
-    ) {
-      return false
-    }
-
-    if (
-      endDate &&
-      logDate > endDate
-    ) {
-      return false
-    }
-
-    return true
-
-  })
-  .reverse()
-  .map((h, i) => {
-
-                    const rawDate = h[0]
-
-                    const formattedDate =
-                      rawDate
-                        ? new Date(rawDate).toLocaleString(
-                            'en-PH',
-                            {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              second: '2-digit',
-                              hour12: true,
-                            }
-                          )
-                        : '-'
-
-                    const action =
-                      (h[2] || '')
-                        .toString()
-                        .toUpperCase()
+                    const id = u[3]
 
                     return (
 
                       <tr key={i}>
 
                         <td>
-                          {formattedDate}
+
+                          <input
+                            type="checkbox"
+                            onChange={(e) => {
+
+                              if (e.target.checked) {
+
+                                setSelectedUsers(prev => [
+                                  ...prev,
+                                  id
+                                ])
+
+                              } else {
+
+                                setSelectedUsers(prev =>
+                                  prev.filter(x => x !== id)
+                                )
+
+                              }
+
+                            }}
+                          />
+
                         </td>
 
-                        <td>
-                          {h[1] || '-'}
-                        </td>
-
-                        <td>
-
-                          <span
-                            className={`history-action ${
-                              action === 'ADD'
-                                ? 'history-add'
-                                : action === 'EDIT'
-                                ? 'history-edit'
-                                : action === 'DELETE'
-                                ? 'history-delete'
-                                : ''
-                            }`}
-                          >
-                            {action}
-                          </span>
-
-                        </td>
-
-                        <td>
-                          {h[3] || '-'}
-                        </td>
-
-                        <td
-                          style={{
-                            maxWidth: '350px',
-                            wordBreak: 'break-word',
-                          }}
-                        >
-{(() => {
-
-  const action =
-    (h[2] || '')
-      .toString()
-      .toUpperCase()
-
-  const sheet =
-    h[3] || 'Unknown Sheet'
-
-  const cell =
-    h[4] || ''
-
-  // EXTRACT ROW NUMBER
-  const rowMatch =
-    cell.match(/\d+/)
-
-  const row =
-    rowMatch
-      ? rowMatch[0]
-      : ''
-
-  if (action === 'ADD') {
-    return `Added ${sheet} Row ${row}`
-  }
-
-  if (action === 'EDIT') {
-    return `Edited ${sheet} Row ${row}`
-  }
-
-  if (action === 'DELETE') {
-    return `Deleted ${sheet} Row ${row}`
-  }
-
-  return `${sheet} Row ${row}`
-
-})()}
-                        </td>
+                        <td>{u[0]}</td>
+                        <td>{u[1]}</td>
+                        <td>{u[2]}</td>
+                        <td>{u[4]}</td>
 
                       </tr>
 
                     )
 
+                  })}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+            <br />
+
+            <button
+              className="reset-btn"
+              onClick={async () => {
+
+                const ids = selectedUsers.join(",")
+
+                const url =
+                  `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}`
+
+                try {
+
+                  await fetch(url, {
+                    method: "GET",
+                    mode: "no-cors"
                   })
 
-              ) : (
+                  alert("✅ Notification sent!")
 
-                <tr>
+                } catch (err) {
 
-                  <td
-                    colSpan="5"
-                    className="empty-state"
-                  >
-                    No history logs found.
-                  </td>
+                  console.error(err)
 
-                </tr>
+                  alert("❌ Failed")
 
-              )}
+                }
 
-            </tbody>
+              }}
+            >
+              Send Reminder
+            </button>
 
-          </table>
+          </>
 
-        </div>
+        )}
 
       </div>
 
-    )}
+{/* =========================
+  HISTORY LOGS PANEL
+========================== */}
 
-  </>
+{isLeader && (
+
+  <div
+    className="glass panel"
+    style={{ marginTop: '24px' }}
+  >
+
+    <div className="panel-header">
+
+      <div>
+
+        <h3>History Logs</h3>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center',
+            marginTop: '12px',
+            marginBottom: '18px',
+            justifyContent: 'flex-end',
+            flexWrap: 'wrap',
+          }}
+        >
+
+          <div className="date-input-group">
+
+            <label>From</label>
+
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+
+          </div>
+
+          <div className="date-input-group">
+
+            <label>To</label>
+
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+
+          </div>
+
+          <button
+            className="reset-btn"
+            onClick={() => {
+              setStartDate('');
+              setEndDate('');
+            }}
+          >
+            Reset
+          </button>
+
+        </div>
+
+        <p className="attendance-count">
+          System Activity Tracker
+        </p>
+
+      </div>
+
+    </div>
+
+    <div className="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Date & Time</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Sheet</th>
+            <th>Details</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {history.length > 1 ? (
+
+            history
+              .slice(1)
+
+              // ✅ FIXED FILTER (NO formatDate BUG)
+              .filter((h) => {
+
+                const rawDate = h[0];
+                const logDate = rawDate ? new Date(rawDate) : null;
+
+                const logDateString =
+                  logDate && !isNaN(logDate.getTime())
+                    ? logDate.toISOString().split('T')[0]
+                    : '';
+
+                if (startDate && logDateString < startDate) return false;
+                if (endDate && logDateString > endDate) return false;
+
+                return true;
+              })
+
+              .reverse()
+
+              .map((h, i) => {
+
+                const rawDate = h[0];
+
+                // ✅ SAFE DATE PARSE
+                const parsedDate =
+                  rawDate ? new Date(rawDate) : null;
+
+                const formattedDate =
+                  parsedDate && !isNaN(parsedDate.getTime())
+                    ? parsedDate.toLocaleString('en-PH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true,
+                      })
+                    : '-';
+
+                const action =
+                  (h[2] || '').toString().toUpperCase();
+
+                const sheet = h[3] || '-';
+
+                const cell = h[4] || '';
+
+                const rowMatch = cell.match(/\d+/);
+                const row = rowMatch ? rowMatch[0] : '';
+
+                return (
+                  <tr key={i}>
+
+                    <td>{formattedDate}</td>
+
+                    <td>{h[1] || '-'}</td>
+
+                    <td>
+                      <span
+                        className={`history-action ${
+                          action === 'ADD'
+                            ? 'history-add'
+                            : action === 'EDIT'
+                            ? 'history-edit'
+                            : action === 'DELETE'
+                            ? 'history-delete'
+                            : ''
+                        }`}
+                      >
+                        {action}
+                      </span>
+                    </td>
+
+                    <td>{sheet}</td>
+
+                    <td style={{ maxWidth: '350px', wordBreak: 'break-word' }}>
+                      {action === 'ADD'
+                        ? `Added ${sheet} Row ${row}`
+                        : action === 'EDIT'
+                        ? `Edited ${sheet} Row ${row}`
+                        : action === 'DELETE'
+                        ? `Deleted ${sheet} Row ${row}`
+                        : `${sheet} Row ${row}`}
+                    </td>
+
+                  </tr>
+                );
+
+              })
+
+          ) : (
+
+            <tr>
+              <td colSpan="5" className="empty-state">
+                No history logs found.
+              </td>
+            </tr>
+
+          )}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
 
 )}
+
+    </>
+
+  )}
       </section>
 
     </main>
