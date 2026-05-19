@@ -496,6 +496,7 @@ useEffect(() => {
     console.log("ROLE:", role)
 
     setIsLeader(role === "leader")
+setIsAdmin(role === "admin")
   }
 
   checkLeader()
@@ -2470,295 +2471,312 @@ underRaw
 {/* QR SCANNER */}
 {activeTab === 'QR Scan' && (
 
-  <div className="glass panel">
+  !isAdmin ? (
 
-    <h2>Member QR Scanner</h2>
+    <div className="glass panel">
 
-    <p className="scanner-subtitle">
-      Scan TRCF Member QR Code
-    </p>
+      <h3>Access Denied (Admin Only)</h3>
 
-    {!window.matchMedia('(display-mode: standalone)').matches ? (
+      <p
+        style={{
+          marginTop: '10px',
+          opacity: 0.7,
+        }}
+      >
+        Only admins can access the QR Scanner.
+      </p>
 
-      <div className="scanner-warning">
-        ⚠ Install the app first to use scanner.
-      </div>
+    </div>
 
-    ) : (
+  ) : (
 
-      <>
+    <div className="glass panel">
 
-        {/* SHOW CAMERA ONLY IF NO RESULT */}
-        {!scanResult && (
-          <div
-            id="reader"
-            className="scanner-box"
-          />
-        )}
+      <h2>Member QR Scanner</h2>
 
-        {/* RESULT CARD */}
-        {scanResult && (
+      <p className="scanner-subtitle">
+        Scan TRCF Member QR Code
+      </p>
 
-          <div className="scan-result-card fade-in">
+      {!window.matchMedia('(display-mode: standalone)').matches ? (
 
-            <div className="scan-left">
+        <div className="scanner-warning">
+          ⚠ Install the app first to use scanner.
+        </div>
 
-              <h3>
-                ✅ Attendance Saved
-              </h3>
+      ) : (
 
-              <p>
-                <strong>ID:</strong>
-                {' '}
-                {scanResult.MemberID}
-              </p>
+        <>
 
-              <p>
-                <strong>Name:</strong>
-                {' '}
-                {scanResult.FullName}
-              </p>
+          {/* SHOW CAMERA ONLY IF NO RESULT */}
+          {!scanResult && (
+            <div
+              id="reader"
+              className="scanner-box"
+            />
+          )}
 
-              <p>
-                <strong>Age:</strong>
-                {' '}
-                {scanResult.Age}
-              </p>
+          {/* RESULT CARD */}
+          {scanResult && (
 
-              <p>
-                <strong>Gender:</strong>
-                {' '}
-                {scanResult.Gender}
-              </p>
+            <div className="scan-result-card fade-in">
 
-              <p>
-                <strong>Leader:</strong>
-                {' '}
-                {scanResult.LGLeader}
-              </p>
+              <div className="scan-left">
+
+                <h3>
+                  ✅ Attendance Saved
+                </h3>
+
+                <p>
+                  <strong>ID:</strong>{' '}
+                  {scanResult.MemberID}
+                </p>
+
+                <p>
+                  <strong>Name:</strong>{' '}
+                  {scanResult.FullName}
+                </p>
+
+                <p>
+                  <strong>Age:</strong>{' '}
+                  {scanResult.Age}
+                </p>
+
+                <p>
+                  <strong>Gender:</strong>{' '}
+                  {scanResult.Gender}
+                </p>
+
+                <p>
+                  <strong>Leader:</strong>{' '}
+                  {scanResult.LGLeader}
+                </p>
+
+              </div>
+
+              {/* RIGHT SIDE BUTTON */}
+              <div className="scan-right">
+
+                <button
+                  className="scan-next-btn"
+                  onClick={async () => {
+
+                    setScanResult(null)
+                    setScannerError('')
+
+                    if (scannerInstance) {
+
+                      try {
+
+                        await scannerInstance.clear()
+
+                      } catch (e) {}
+
+                      const reader =
+                        document.getElementById('reader')
+
+                      if (reader) {
+                        reader.innerHTML = ''
+                      }
+
+                      const newScanner =
+                        new Html5QrcodeScanner(
+                          'reader',
+                          {
+                            fps: 5,
+                            qrbox: 260,
+                          },
+                          false
+                        )
+
+                      setScannerInstance(newScanner)
+
+                      let isScanning = false
+
+                      newScanner.render(
+
+                        async (decodedText) => {
+
+                          if (isScanning) return
+
+                          isScanning = true
+
+                          let memberId = decodedText
+
+                          if (
+                            decodedText.startsWith(
+                              'TRCF_MEMBER:'
+                            )
+                          ) {
+
+                            memberId =
+                              decodedText.replace(
+                                'TRCF_MEMBER:',
+                                ''
+                              )
+                          }
+
+                          memberId =
+                            memberId
+                              .toString()
+                              .trim()
+
+                          const cleanMemberId =
+                            memberId
+                              .replace(/\s/g, '')
+                              .toLowerCase()
+
+                          const foundMember =
+                            members
+                              .slice(1)
+                              .find((m) => {
+
+                                const sheetId =
+                                  String(m[0] || '')
+                                    .trim()
+                                    .replace(/\s/g, '')
+                                    .toLowerCase()
+
+                                return (
+                                  sheetId === cleanMemberId
+                                )
+
+                              })
+
+                          if (foundMember) {
+
+                            try {
+
+                              await newScanner.clear()
+
+                              await fetch(
+                                `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`
+                              )
+
+                            } catch (err) {}
+
+                            setScanResult({
+
+                              MemberID: foundMember[0],
+                              FullName: foundMember[1],
+                              Age: foundMember[2],
+                              Gender: foundMember[3],
+                              Contact: foundMember[4],
+                              Email: foundMember[5],
+                              LGLeader: foundMember[6],
+
+                            })
+
+                            setScannerError('')
+
+                          } else {
+
+                            setScanResult(null)
+
+                            setScannerError(
+                              `Member not found: ${memberId}`
+                            )
+                          }
+
+                          setTimeout(() => {
+                            isScanning = false
+                          }, 2500)
+
+                        },
+
+                        () => {}
+
+                      )
+                    }
+
+                  }}
+                >
+                  Scan Next QR
+                </button>
+
+              </div>
 
             </div>
 
-            {/* RIGHT SIDE BUTTON */}
-            <div className="scan-right">
+          )}
 
-              <button
-  className="scan-next-btn"
-  onClick={async () => {
+          {scannerError && (
 
-    setScanResult(null)
-    setScannerError('')
+            <p className="scanner-error">
+              {scannerError}
+            </p>
 
-    // RESTART SCANNER
-    if (scannerInstance) {
+          )}
 
-      try {
+        </>
 
-        await scannerInstance.clear()
+      )}
 
-      } catch (e) {}
+      <br />
 
-      const reader =
-        document.getElementById('reader')
+      <div className="qr-generator-box">
 
-      if (reader) {
-        reader.innerHTML = ''
-      }
+        <h3>QR Code Generator</h3>
 
-      const newScanner =
-        new Html5QrcodeScanner(
-          'reader',
-          {
-            fps: 5,
-            qrbox: 260,
-          },
-          false
-        )
-
-      setScannerInstance(newScanner)
-
-      let isScanning = false
-
-      newScanner.render(
-
-        async (decodedText) => {
-
-          if (isScanning) return
-
-          isScanning = true
-
-          let memberId = decodedText
-
-          if (
-            decodedText.startsWith(
-              'TRCF_MEMBER:'
-            )
-          ) {
-
-            memberId =
-              decodedText.replace(
-                'TRCF_MEMBER:',
-                ''
-              )
+        <input
+          type="text"
+          placeholder="Enter MemberID"
+          value={qrMemberId}
+          onChange={(e) =>
+            setQrMemberId(e.target.value)
           }
+          className="qr-input"
+        />
 
-          memberId =
-            memberId
-              .toString()
-              .trim()
+        <button
+          className="reset-btn"
+          onClick={() => {
 
-          const cleanMemberId =
-            memberId
-              .replace(/\s/g, '')
-              .toLowerCase()
+            if (!qrMemberId) return
 
-          const foundMember =
-            members
-              .slice(1)
-              .find((m) => {
+            const qrData =
+              `TRCF_MEMBER:${qrMemberId}`
 
-                const sheetId =
-                  String(m[0] || '')
-                    .trim()
-                    .replace(/\s/g, '')
-                    .toLowerCase()
+            const qrUrl =
+              `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`
 
-                return (
-                  sheetId === cleanMemberId
-                )
+            setGeneratedQR(qrUrl)
 
-              })
+          }}
+        >
+          Generate QR
+        </button>
 
-          if (foundMember) {
+        {generatedQR && (
 
-            try {
+          <div className="generated-qr-preview">
 
-              await newScanner.clear()
+            <img
+              src={generatedQR}
+              alt="Generated QR"
+              className="generated-qr-image"
+            />
 
-              await fetch(
-                `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`
-              )
+            <br />
 
-            } catch (err) {}
-
-            setScanResult({
-
-              MemberID: foundMember[0],
-              FullName: foundMember[1],
-              Age: foundMember[2],
-              Gender: foundMember[3],
-              Contact: foundMember[4],
-              Email: foundMember[5],
-              LGLeader: foundMember[6],
-
-            })
-
-          } else {
-
-            setScanResult(null)
-
-            setScannerError(
-              `Member not found: ${memberId}`
-            )
-          }
-
-          setTimeout(() => {
-            isScanning = false
-          }, 2500)
-
-        },
-
-        () => {}
-
-      )
-    }
-
-  }}
->
-  Scan Next QR
-</button>
-
-            </div>
+            <a
+              href={generatedQR}
+              download={`${qrMemberId}.png`}
+            >
+              <button className="reset-btn">
+                Download QR
+              </button>
+            </a>
 
           </div>
 
         )}
 
-        {scannerError && (
-
-          <p className="scanner-error">
-            {scannerError}
-          </p>
-
-        )}
-
-      </>
-
-    )}
-
-    <br />
-
-    <div className="qr-generator-box">
-
-      <h3>QR Code Generator</h3>
-
-      <input
-        type="text"
-        placeholder="Enter MemberID"
-        value={qrMemberId}
-        onChange={(e) =>
-          setQrMemberId(e.target.value)
-        }
-        className="qr-input"
-      />
-
-      <button
-        className="reset-btn"
-        onClick={() => {
-
-          if (!qrMemberId) return
-
-          const qrData =
-  `TRCF_MEMBER:${qrMemberId}`
-
-const qrUrl =
-  `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`
-
-          setGeneratedQR(qrUrl)
-
-        }}
-      >
-        Generate QR
-      </button>
-
-      {generatedQR && (
-
-        <div className="generated-qr-preview">
-
-          <img
-            src={generatedQR}
-            alt="Generated QR"
-            className="generated-qr-image"
-          />
-
-          <br />
-
-          <a
-            href={generatedQR}
-            download={`${qrMemberId}.png`}
-          >
-            <button className="reset-btn">
-              Download QR
-            </button>
-          </a>
-
-        </div>
-
-      )}
+      </div>
 
     </div>
 
-  </div>
+  )
 
 )}
 
