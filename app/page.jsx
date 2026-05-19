@@ -16,6 +16,11 @@ import {
   ClipboardList,
   Search,
   Menu,
+  Shield,
+  QrCode,
+  LayoutDashboard,
+  HandCoins,
+  UserRoundCheck,
 } from 'lucide-react'
 
 import CalendarView from 'react-calendar'
@@ -133,6 +138,8 @@ const handleSendFirstTimersBulk = async () => {
   const [youthGetLoud, setYouthGetLoud] = useState([])
   const [yglParticipants, setYglParticipants] =
   useState([])
+const [isStandalone, setIsStandalone] =
+  useState(false)
 
 const [selectedEventParticipants,
   setSelectedEventParticipants] =
@@ -252,6 +259,20 @@ useEffect(() => {
       'resize',
       checkMobile
     )
+
+}, [])
+
+useEffect(() => {
+
+  if (typeof window === 'undefined') return
+
+  const standalone =
+    window.matchMedia(
+      '(display-mode: standalone)'
+    ).matches ||
+    window.navigator.standalone === true
+
+  setIsStandalone(standalone)
 
 }, [])
 
@@ -904,7 +925,7 @@ const financeChartData = useMemo(() => {
             />
           </div>
 
-          <div className="menu">
+<div className="menu">
 
   {[
     {
@@ -913,7 +934,7 @@ const financeChartData = useMemo(() => {
     },
     {
       name: 'Dashboard',
-      icon: <Home size={18} />,
+      icon: <LayoutDashboard size={18} />,
     },
     {
       name: 'Attendance',
@@ -929,19 +950,19 @@ const financeChartData = useMemo(() => {
     },
     {
       name: 'FollowUp',
-      icon: <Users size={18} />,
+      icon: <UserRoundCheck size={18} />,
     },
     {
       name: 'Finance',
-      icon: <ClipboardList size={18} />,
+      icon: <HandCoins size={18} />,
     },
     {
       name: 'QR Scan',
-      icon: <ClipboardList size={18} />,
+      icon: <QrCode size={18} />,
     },
     {
       name: 'Admin',
-      icon: <Users size={18} />,
+      icon: <Shield size={18} />,
     }
   ].map((tab) => (
 
@@ -2499,7 +2520,7 @@ underRaw
         Scan TRCF Member QR Code
       </p>
 
-      {!window.matchMedia('(display-mode: standalone)').matches ? (
+      {!isStandalone ? (
 
         <div className="scanner-warning">
           ⚠ Install the app first to use scanner.
