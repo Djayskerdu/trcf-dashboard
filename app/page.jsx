@@ -949,21 +949,37 @@ const financeChartData = useMemo(() => {
       icon: <Users size={18} />,
     },
     {
-      name: 'FollowUp',
-      icon: <UserRoundCheck size={18} />,
-    },
-    {
       name: 'Finance',
       icon: <HandCoins size={18} />,
     },
-    {
-      name: 'QR Scan',
-      icon: <QrCode size={18} />,
-    },
-    {
-      name: 'Admin',
-      icon: <Shield size={18} />,
-    }
+
+    // ONLY SHOW FOLLOWUP
+    // IF LEADER OR ADMIN
+    ...(isLeader || isAdmin
+      ? [{
+          name: 'FollowUp',
+          icon: <UserRoundCheck size={18} />,
+        }]
+      : []),
+
+    // ONLY SHOW QR SCAN
+    // IF ADMIN
+    ...(isAdmin
+      ? [{
+          name: 'QR Scan',
+          icon: <QrCode size={18} />,
+        }]
+      : []),
+
+    // ONLY SHOW ADMIN
+    // IF LEADER OR ADMIN
+    ...(isLeader || isAdmin
+      ? [{
+          name: 'Admin',
+          icon: <Shield size={18} />,
+        }]
+      : []),
+
   ].map((tab) => (
 
     <MenuItem
@@ -2238,8 +2254,28 @@ underRaw
 
 )}
 
-        {/* FOLLOWUP */}
         {activeTab === 'FollowUp' && (
+
+  !(isLeader || isAdmin) ? (
+
+    <div className="glass panel">
+
+      <h3>
+        Access Denied
+      </h3>
+
+      <p
+        style={{
+          marginTop: '10px',
+          opacity: 0.7,
+        }}
+      >
+        Only Leaders and Admins can access Follow Up.
+      </p>
+
+    </div>
+
+  ) : (
 
           <div className="glass panel">
 
@@ -2364,7 +2400,7 @@ underRaw
             </div>
 
           </div>
-
+  )
         )}
         
 
