@@ -2982,11 +2982,11 @@ underRaw
 const ids =
   selectedData.map(u => u[3]).join(",")
 
-const names =
+const name =
   selectedData.map(u => u[0]).join(",")
 
     const url =
-  `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}&names=${encodeURIComponent(names)}`
+  `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}&name=${encodeURIComponent(name)}`
 
     try {
 
