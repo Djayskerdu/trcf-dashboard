@@ -3068,6 +3068,7 @@ height: '200px',
           position: 'absolute',
           top: '295px',
           width: '100%',
+          left: '5px',
           textAlign: 'center'
         }}
       >
