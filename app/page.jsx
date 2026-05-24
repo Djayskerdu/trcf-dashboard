@@ -2,6 +2,8 @@
 
 import axios from 'axios'
 import { Html5QrcodeScanner } from 'html5-qrcode'
+import QRCode from 'qrcode'
+import html2canvas from 'html2canvas'
 import {
   useEffect,
   useMemo,
@@ -242,6 +244,15 @@ const philippineHolidays = [
   },
 ]
 
+const selectedMember =
+  members
+    .slice(1)
+    .find(
+      m =>
+        String(m[0]).trim() ===
+        String(qrMemberId).trim()
+    )
+    
 const [isMobile, setIsMobile] = useState(false)
 
 useEffect(() => {
@@ -2992,12 +3003,14 @@ underRaw
             if (!qrMemberId) return
 
             const qrData =
-              `TRCF_MEMBER:${qrMemberId}`
+  `TRCF_MEMBER:${qrMemberId}`
 
-            const qrUrl =
-              `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`
+QRCode.toDataURL(qrData)
+  .then((url) => {
 
-            setGeneratedQR(qrUrl)
+    setGeneratedQR(url)
+
+  })
 
           }}
         >
@@ -3006,28 +3019,131 @@ underRaw
 
         {generatedQR && (
 
-          <div className="generated-qr-preview">
+  <div className="generated-qr-preview">
 
-            <img
-              src={generatedQR}
-              alt="Generated QR"
-              className="generated-qr-image"
-            />
+    <div
+      id="qr-card"
+      className="
+        relative
+        w-[380px]
+        h-[680px]
+        mx-auto
+        overflow-hidden
+        rounded-[20px]
+      "
+    >
 
-            <br />
+      {/* TEMPLATE */}
+      <img
+        src="/templates/youthjam-template.jpg"
+        alt="Template"
+        className="
+          absolute
+          inset-0
+          w-full
+          h-full
+          object-cover
+        "
+      />
 
-            <a
-              href={generatedQR}
-              download={`${qrMemberId}.png`}
-            >
-              <button className="reset-btn">
-                Download QR
-              </button>
-            </a>
+      {/* QR */}
+      <img
+        src={generatedQR}
+        alt="QR"
+        className="
+          absolute
+          top-[112px]
+          left-1/2
+          -translate-x-1/2
+          w-[215px]
+          h-[215px]
+          bg-white
+          p-2
+        "
+      />
 
-          </div>
+      {/* NAME */}
+      <div
+        className="
+          absolute
+          top-[390px]
+          left-0
+          w-full
+          text-center
+        "
+      >
 
-        )}
+        <h2
+          className="
+            text-[#17379d]
+            text-[20px]
+            font-bold
+            uppercase
+          "
+        >
+          {selectedMember?.[1] || qrMemberId}
+        </h2>
+
+      </div>
+
+      {/* LEADER */}
+      <div
+        className="
+          absolute
+          top-[485px]
+          left-0
+          w-full
+          text-center
+        "
+      >
+
+        <p
+          className="
+            text-[#17379d]
+            text-[16px]
+            uppercase
+          "
+        >
+          {selectedMember?.[6] || 'NO LEADER'}
+        </p>
+
+      </div>
+
+    </div>
+
+    <br />
+
+    <button
+      className="reset-btn"
+      onClick={async () => {
+
+        const card =
+          document.getElementById('qr-card')
+
+        const canvas =
+          await html2canvas(card, {
+            scale: 3
+          })
+
+        const link =
+          document.createElement('a')
+
+        link.download =
+          `${qrMemberId}-TRCF.png`
+
+        link.href =
+          canvas.toDataURL('image/png')
+
+        link.click()
+
+      }}
+    >
+      Download QR Card
+    </button>
+
+  </div>
+
+)}
 
       </div>
 
