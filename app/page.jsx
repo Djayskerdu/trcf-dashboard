@@ -3076,7 +3076,7 @@ height: '200px',
         <h2
           style={{
             color: '#000000',
-            fontSize: '18px',
+            fontSize: '14px',
 fontWeight: 'bold',
           }}
         >
