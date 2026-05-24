@@ -3066,7 +3066,7 @@ height: '200px',
       <div
         style={{
           position: 'absolute',
-          top: '300px',
+          top: '295px',
           width: '100%',
           textAlign: 'center'
         }}
