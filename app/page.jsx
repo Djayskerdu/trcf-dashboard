@@ -3079,7 +3079,7 @@ height: '200px',
 fontWeight: 'bold',
           }}
         >
-          {selectedMember?.[1] || qrMemberId}
+          {(selectedMember?.[1] || qrMemberId).toUpperCase()}
         </h2>
 
       </div>
@@ -3102,7 +3102,7 @@ fontWeight: 'bold',
             fontWeight: 'bold',
           }}
         >
-          {selectedMember?.[6] || 'NO LEADER'}
+          {(selectedMember?.[6] || 'NO LEADER').toUpperCase()}
         </p>
 
       </div>
