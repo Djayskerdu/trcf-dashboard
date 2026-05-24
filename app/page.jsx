@@ -3118,7 +3118,7 @@ fontWeight: 'bold',
         const card =
           document.getElementById('qr-card')
 
-        const canvas=
+        const canvas =
           await html2canvas(card, {
             scale: 3
           })
