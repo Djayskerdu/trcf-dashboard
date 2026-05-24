@@ -3051,25 +3051,25 @@ QRCode.toDataURL(qrData)
         src={generatedQR}
         alt="QR"
         style={{
-          position: 'absolute',
-          top: '110px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '215px',
-          height: '215px',
-          background: 'white',
-          padding: '10px'
-        }}
+  position: 'absolute',
+  top: '105px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: '170px',
+  height: '170px',
+  background: 'white',
+  padding: '8px'
+}}
       />
 
       {/* NAME */}
       <div
         style={{
-          position: 'absolute',
-          top: '390px',
-          width: '100%',
-          textAlign: 'center'
-        }}
+  position: 'absolute',
+  top: '300px',
+  width: '100%',
+  textAlign: 'center'
+}}
       >
 
         <h2
@@ -3087,11 +3087,11 @@ QRCode.toDataURL(qrData)
       {/* LEADER */}
       <div
         style={{
-          position: 'absolute',
-          top: '485px',
-          width: '100%',
-          textAlign: 'center'
-        }}
+  position: 'absolute',
+  top: '385px',
+  width: '100%',
+  textAlign: 'center'
+}}
       >
 
         <p
