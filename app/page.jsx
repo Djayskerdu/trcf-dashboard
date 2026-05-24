@@ -3074,7 +3074,7 @@ height: '200px',
 
         <h2
           style={{
-            color: '#17379d',
+            color: '#000000',
             fontSize: '18px',
 fontWeight: 'bold',
           }}
@@ -3097,7 +3097,7 @@ fontWeight: 'bold',
 
         <p
           style={{
-            color: '#17379d',
+            color: '#000000',
             fontSize: '14px',
           }}
         >
