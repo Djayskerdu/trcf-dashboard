@@ -3054,9 +3054,9 @@ height: '475px',
   position: 'absolute',
   left: '50%',
   transform: 'translateX(-50%)',
-top: '110px',
-width: '250px',
-height: '250px',
+top: '10px',
+width: '200px',
+height: '200px',
   background: 'white',
   padding: '8px'
 }}
