@@ -3052,11 +3052,11 @@ height: '475px',
         alt="QR"
         style={{
   position: 'absolute',
-  left: '50%',
+  left: '55%',
   transform: 'translateX(-50%)',
-top: '90px',
-width: '200px',
-height: '200px',
+top: '60px',
+width: '180px',
+height: '180px',
   background: 'white',
   padding: '8px'
 }}
