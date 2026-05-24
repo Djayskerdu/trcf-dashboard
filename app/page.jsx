@@ -3026,7 +3026,7 @@ QRCode.toDataURL(qrData)
       style={{
         position: 'relative',
         width: '380px',
-        height: '680px',
+height: '475px',
         margin: 'auto',
         overflow: 'hidden',
         borderRadius: '20px'
@@ -3052,11 +3052,11 @@ QRCode.toDataURL(qrData)
         alt="QR"
         style={{
   position: 'absolute',
-  top: '105px',
   left: '50%',
   transform: 'translateX(-50%)',
-  width: '170px',
-  height: '170px',
+top: '82px',
+width: '130px',
+height: '130px',
   background: 'white',
   padding: '8px'
 }}
@@ -3065,18 +3065,18 @@ QRCode.toDataURL(qrData)
       {/* NAME */}
       <div
         style={{
-  position: 'absolute',
-  top: '300px',
-  width: '100%',
-  textAlign: 'center'
-}}
+          position: 'absolute',
+          top: '255px',
+          width: '100%',
+          textAlign: 'center'
+        }}
       >
 
         <h2
           style={{
             color: '#17379d',
-            fontSize: '20px',
-            fontWeight: 'bold'
+            fontSize: '18px',
+fontWeight: 'bold',
           }}
         >
           {selectedMember?.[1] || qrMemberId}
@@ -3087,17 +3087,17 @@ QRCode.toDataURL(qrData)
       {/* LEADER */}
       <div
         style={{
-  position: 'absolute',
-  top: '385px',
-  width: '100%',
-  textAlign: 'center'
-}}
+          position: 'absolute',
+          top: '365px',
+          width: '100%',
+          textAlign: 'center'
+        }}
       >
 
         <p
           style={{
             color: '#17379d',
-            fontSize: '16px'
+            fontSize: '14px',
           }}
         >
           {selectedMember?.[6] || 'NO LEADER'}
