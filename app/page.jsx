@@ -252,7 +252,7 @@ const selectedMember =
         String(m[0]).trim() ===
         String(qrMemberId).trim()
     )
-    
+
 const [isMobile, setIsMobile] = useState(false)
 
 useEffect(() => {
@@ -3023,63 +3023,61 @@ QRCode.toDataURL(qrData)
 
     <div
       id="qr-card"
-      className="
-        relative
-        w-[380px]
-        h-[680px]
-        mx-auto
-        overflow-hidden
-        rounded-[20px]
-      "
+      style={{
+        position: 'relative',
+        width: '380px',
+        height: '680px',
+        margin: 'auto',
+        overflow: 'hidden',
+        borderRadius: '20px'
+      }}
     >
 
       {/* TEMPLATE */}
       <img
         src="/templates/youthjam-template.jpg"
         alt="Template"
-        className="
-          absolute
-          inset-0
-          w-full
-          h-full
-          object-cover
-        "
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          position: 'absolute',
+          inset: 0
+        }}
       />
 
       {/* QR */}
       <img
         src={generatedQR}
         alt="QR"
-        className="
-          absolute
-          top-[112px]
-          left-1/2
-          -translate-x-1/2
-          w-[215px]
-          h-[215px]
-          bg-white
-          p-2
-        "
+        style={{
+          position: 'absolute',
+          top: '110px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '215px',
+          height: '215px',
+          background: 'white',
+          padding: '10px'
+        }}
       />
 
       {/* NAME */}
       <div
-        className="
-          absolute
-          top-[390px]
-          left-0
-          w-full
-          text-center
-        "
+        style={{
+          position: 'absolute',
+          top: '390px',
+          width: '100%',
+          textAlign: 'center'
+        }}
       >
 
         <h2
-          className="
-            text-[#17379d]
-            text-[20px]
-            font-bold
-            uppercase
-          "
+          style={{
+            color: '#17379d',
+            fontSize: '20px',
+            fontWeight: 'bold'
+          }}
         >
           {selectedMember?.[1] || qrMemberId}
         </h2>
@@ -3088,21 +3086,19 @@ QRCode.toDataURL(qrData)
 
       {/* LEADER */}
       <div
-        className="
-          absolute
-          top-[485px]
-          left-0
-          w-full
-          text-center
-        "
+        style={{
+          position: 'absolute',
+          top: '485px',
+          width: '100%',
+          textAlign: 'center'
+        }}
       >
 
         <p
-          className="
-            text-[#17379d]
-            text-[16px]
-            uppercase
-          "
+          style={{
+            color: '#17379d',
+            fontSize: '16px'
+          }}
         >
           {selectedMember?.[6] || 'NO LEADER'}
         </p>
