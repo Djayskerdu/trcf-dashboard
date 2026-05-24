@@ -3052,9 +3052,9 @@ height: '475px',
         alt="QR"
         style={{
   position: 'absolute',
-  left: '50.5%',
+  left: '50.6%',
   transform: 'translateX(-50%)',
-top: '60px',
+top: '70px',
 width: '200px',
 height: '200px',
   background: 'white',
