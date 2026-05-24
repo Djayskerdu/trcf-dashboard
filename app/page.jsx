@@ -3066,7 +3066,7 @@ height: '200px',
       <div
         style={{
           position: 'absolute',
-          top: '300px',
+          top: '305px',
           width: '100%',
           textAlign: 'center'
         }}
@@ -3099,6 +3099,7 @@ fontWeight: 'bold',
           style={{
             color: '#000000',
             fontSize: '14px',
+            fontWeight: 'bold',
           }}
         >
           {selectedMember?.[6] || 'NO LEADER'}
@@ -3117,7 +3118,7 @@ fontWeight: 'bold',
         const card =
           document.getElementById('qr-card')
 
-        const canvas =
+        const canvas=
           await html2canvas(card, {
             scale: 3
           })
