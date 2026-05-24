@@ -3054,7 +3054,7 @@ height: '475px',
   position: 'absolute',
   left: '50%',
   transform: 'translateX(-50%)',
-top: '100px',
+top: '120px',
 width: '130px',
 height: '130px',
   background: 'white',
@@ -3066,7 +3066,7 @@ height: '130px',
       <div
         style={{
           position: 'absolute',
-          top: '390px',
+          top: '300px',
           width: '100%',
           textAlign: 'center'
         }}
@@ -3090,6 +3090,7 @@ fontWeight: 'bold',
           position: 'absolute',
           top: '350px',
           width: '100%',
+          left: '5px',
           textAlign: 'center'
         }}
       >
