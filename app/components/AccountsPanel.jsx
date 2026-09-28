@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { UserPlus, KeyRound } from 'lucide-react'
+import { UserPlus, KeyRound, BellRing, Smartphone } from 'lucide-react'
 import Modal from './Modal'
 import { api } from '../lib/api'
 
@@ -19,6 +19,9 @@ export default function AccountsPanel({ me }) {
   const [reset, setReset] = useState(null)
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState('')
+  const [selected, setSelected] = useState([])
+  const [sending, setSending] = useState(false)
+  const [notice, setNotice] = useState(null) // { ok, text }
 
   const load = useCallback(async () => {
     try {
@@ -61,12 +64,36 @@ export default function AccountsPanel({ me }) {
     }
   }
 
+  const notifiable = accounts.filter((a) => a.status === 'active' && a.devices > 0)
+  const allSelected = notifiable.length > 0 && notifiable.every((a) => selected.includes(a.username))
+
+  const toggle = (username) =>
+    setSelected((cur) => (cur.includes(username) ? cur.filter((u) => u !== username) : [...cur, username]))
+
+  const sendReminder = async () => {
+    if (!selected.length || sending) return
+    setSending(true)
+    setNotice(null)
+    try {
+      const res = await api('notify', { usernames: selected })
+      const skipped = res.skipped?.length ? ` · ${res.skipped.length} had no device` : ''
+      setNotice({ ok: true, text: `Reminder sent to ${res.accounts} account(s) on ${res.sent} device(s)${skipped}` })
+      setSelected([])
+    } catch (err) {
+      setNotice({ ok: false, text: err.message })
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
-    <div className="glass panel" style={{ marginBottom: 24 }}>
+    <div className="glass panel accounts-panel" style={{ marginBottom: 24 }}>
       <div className="panel-header">
         <div>
           <h3>Accounts</h3>
-          <p className="attendance-count">Who can log in to this dashboard</p>
+          <p className="attendance-count">
+            Who can log in — and who gets reminders. Tick accounts, then send a notification.
+          </p>
         </div>
         <button
           className="reset-btn manage-add"
@@ -80,27 +107,50 @@ export default function AccountsPanel({ me }) {
       </div>
 
       {error && <div className="form-error">{error}</div>}
+      {notice && (
+        <div className={notice.ok ? 'form-ok' : 'form-error'} role="status">{notice.text}</div>
+      )}
 
       <div className="table-wrapper">
         <table className="compact">
           <thead>
             <tr>
+              <th className="col-check">
+                <input
+                  type="checkbox"
+                  aria-label="Select all accounts that can receive notifications"
+                  checked={allSelected}
+                  disabled={!notifiable.length}
+                  onChange={() => setSelected(allSelected ? [] : notifiable.map((a) => a.username))}
+                />
+              </th>
               <th>Name</th>
               <th>Username</th>
               <th>Role</th>
               <th>Status</th>
+              <th>Notifications</th>
               <th>Last login</th>
               <th className="col-actions">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={6} style={{ textAlign: 'center', opacity: 0.6 }}>Loading…</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', opacity: 0.6 }}>Loading…</td></tr>
             )}
             {accounts.map((a) => {
               const isMe = a.username === me.username
               return (
-                <tr key={a.username}>
+                <tr key={a.username} className={selected.includes(a.username) ? 'row-selected' : ''}>
+                  <td className="col-check">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${a.name}`}
+                      checked={selected.includes(a.username)}
+                      disabled={a.status !== 'active' || !a.devices}
+                      title={a.devices ? '' : 'No device registered yet'}
+                      onChange={() => toggle(a.username)}
+                    />
+                  </td>
                   <td>{a.name}{isMe && <span className="badge">you</span>}</td>
                   <td>{a.username}</td>
                   <td>
@@ -118,6 +168,17 @@ export default function AccountsPanel({ me }) {
                   </td>
                   <td>
                     <span className={`status-pill ${a.status === 'active' ? 'ok' : 'off'}`}>{a.status}</span>
+                  </td>
+                  <td>
+                    {a.devices > 0 ? (
+                      <span className="device-pill on">
+                        <Smartphone size={13} /> {a.devices} device{a.devices > 1 ? 's' : ''}
+                      </span>
+                    ) : (
+                      <span className="device-pill off" title="Ask them to log in on the installed app and allow notifications">
+                        No device
+                      </span>
+                    )}
                   </td>
                   <td>
                     {a.lastLogin
@@ -153,6 +214,19 @@ export default function AccountsPanel({ me }) {
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="send-bar">
+        <span>
+          {selected.length
+            ? `${selected.length} selected`
+            : notifiable.length
+              ? 'Select accounts to remind'
+              : 'No account has a registered device yet'}
+        </span>
+        <button className="reset-btn" onClick={sendReminder} disabled={!selected.length || sending}>
+          <BellRing size={16} /> {sending ? 'Sending…' : 'Send reminder'}
+        </button>
       </div>
 
       {create && (

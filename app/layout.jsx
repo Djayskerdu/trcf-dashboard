@@ -1,4 +1,5 @@
 import './globals.css'
+import './rebrand.css'
 import Script from 'next/script'
 import OneSignalClient from './OneSignalClient'
 
@@ -20,6 +21,13 @@ export default function RootLayout({
         <link
           rel="manifest"
           href="/manifest.json"
+        />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         />
 
         <Script

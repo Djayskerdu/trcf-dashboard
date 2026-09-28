@@ -30,10 +30,14 @@ export default function LoginScreen({ onLogin }) {
   return (
     <main className="login-page">
       <form className="login-card glass" onSubmit={submit}>
+        <div className="login-eq" aria-hidden="true">
+          <span className="eq live"><i /><i /><i /><i /><i /></span>
+        </div>
+
         <img src="/Add a heading.png" alt="TRCF Youth Jam" className="login-logo" />
 
-        <h1>Welcome back</h1>
-        <p className="login-sub">Log in to the TRCF Youth Jam Database</p>
+        <h1>Youth Jam Database</h1>
+        <p className="login-sub">Sign in to keep the records moving</p>
 
         <label className="field">
           <span>Username</span>

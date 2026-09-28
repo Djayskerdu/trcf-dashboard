@@ -1,0 +1,664 @@
+/* =====================================================================
+   TRCF YOUTH JAM — REBRAND LAYER
+   Loaded AFTER globals.css, so it restyles without touching layout logic.
+   Palette is unchanged (navy / electric blue / violet); type, shape,
+   components and motion are new.  Tokens first, then components.
+===================================================================== */
+
+:root {
+  /* palette (same family as before) */
+  --ink: #060d24;
+  --ink-2: #0a1233;
+  --surface: rgba(14, 22, 54, 0.72);
+  --surface-solid: #0e1636;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text: #eef2ff;
+  --muted: #93a4dc;
+  --blue: #2f7dff;
+  --blue-deep: #2563eb;
+  --violet: #8c52ff;
+  --amber: #ffa53d;
+  --mint: #34d399;
+  --rose: #ff6b81;
+
+  /* type */
+  --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+
+  /* shape: three radii on purpose */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 26px;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html,
+body {
+  font-family: var(--font-body);
+  background: var(--ink);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4,
+.topbar h1,
+.stat-card h2,
+.brand-name {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ================= BACKDROP ================= */
+
+.dashboard,
+.login-page {
+  background:
+    radial-gradient(900px 500px at -5% -10%, rgba(47, 125, 255, 0.2), transparent 60%),
+    radial-gradient(700px 500px at 105% 110%, rgba(140, 82, 255, 0.16), transparent 60%),
+    var(--ink);
+}
+
+/* ================= GLASS / PANELS ================= */
+
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 50px -30px rgba(0, 0, 0, 0.7);
+}
+
+.panel {
+  border-radius: var(--r-lg);
+}
+
+.panel h3 {
+  font-size: 21px;
+}
+
+.attendance-count,
+.topbar p {
+  color: var(--muted);
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar {
+  background: linear-gradient(180deg, rgba(9, 16, 42, 0.98), rgba(6, 11, 32, 0.98));
+  border-right: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand .logo {
+  width: 108px;
+}
+
+.brand-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.menu {
+  gap: 4px;
+}
+
+.menu-item {
+  position: relative;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-body);
+  border-radius: var(--r-md);
+  padding: 11px 14px;
+  color: #b9c6f5;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.menu-item svg {
+  transition: transform 0.25s var(--ease);
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.menu-item:hover svg {
+  transform: translateX(2px);
+}
+
+/* active = tinted, with a bar that grows in (answers the click) */
+.menu-item.active {
+  background: linear-gradient(90deg, rgba(47, 125, 255, 0.24), rgba(140, 82, 255, 0.1));
+  color: #fff;
+  box-shadow: none;
+}
+
+.menu-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 22px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--blue), var(--violet));
+  transform: translateY(-50%);
+  animation: barIn 0.35s var(--ease);
+}
+
+@keyframes barIn {
+  from { height: 0; opacity: 0; }
+  to   { height: 22px; opacity: 1; }
+}
+
+.sidebar-user {
+  border-top: 1px solid var(--line);
+}
+
+.role-badge {
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* ================= EQUALIZER (the Jam motif) ================= */
+
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+}
+
+.eq i {
+  display: block;
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--blue), var(--violet));
+  transform-origin: bottom;
+  transform: scaleY(0.35);
+}
+
+.eq i:nth-child(2) { transform: scaleY(0.75); }
+.eq i:nth-child(3) { transform: scaleY(0.5); }
+.eq i:nth-child(4) { transform: scaleY(1); }
+.eq i:nth-child(5) { transform: scaleY(0.6); }
+
+.brand:hover .eq i,
+.eq.live i {
+  animation: eq 0.9s ease-in-out infinite alternate;
+}
+
+.eq i:nth-child(2) { animation-delay: -0.3s; }
+.eq i:nth-child(3) { animation-delay: -0.6s; }
+.eq i:nth-child(4) { animation-delay: -0.15s; }
+.eq i:nth-child(5) { animation-delay: -0.45s; }
+
+@keyframes eq {
+  from { transform: scaleY(0.25); }
+  to   { transform: scaleY(1); }
+}
+
+/* ================= TOPBAR ================= */
+
+.topbar {
+  border-radius: var(--r-lg);
+  padding: 24px 28px;
+}
+
+.topbar h1 {
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.search-box {
+  border-radius: var(--r-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(47, 125, 255, 0.15);
+}
+
+/* tab switch: opacity only, so fixed popups inside keep working */
+.tab-view {
+  animation: tabIn 0.28s ease both;
+}
+
+@keyframes tabIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ================= BUTTONS ================= */
+
+.reset-btn,
+.finance-reset-btn,
+.scan-next-btn {
+  font-family: var(--font-body);
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, var(--blue-deep), #4f46e5);
+  border: none;
+  box-shadow: 0 8px 22px -10px rgba(47, 125, 255, 0.7);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), filter 0.2s;
+}
+
+.reset-btn:hover:not(:disabled),
+.finance-reset-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px -10px rgba(47, 125, 255, 0.85);
+  filter: brightness(1.08);
+}
+
+.reset-btn:active:not(:disabled),
+.finance-reset-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.reset-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-ghost,
+.icon-btn {
+  border-radius: var(--r-sm);
+}
+
+/* ================= STAT CARDS ================= */
+
+.stat-card {
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 132px;
+  padding: 22px 24px;
+  border-radius: var(--r-lg);
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  --accent: var(--blue);
+}
+
+.stat-card.green  { --accent: var(--mint); }
+.stat-card.orange { --accent: var(--amber); }
+.stat-card.purple { --accent: var(--violet); }
+
+.stat-card::before {
+  top: auto;
+  right: auto;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  border-radius: 0;
+  background: linear-gradient(90deg, var(--accent), transparent 80%);
+}
+
+.stat-card.blue,
+.stat-card.green,
+.stat-card.orange,
+.stat-card.purple {
+  background:
+    radial-gradient(240px 120px at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+    var(--surface-solid);
+}
+
+.stat-card p {
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--muted);
+  opacity: 1;
+  margin: 0;
+}
+
+.stat-card h2 {
+  text-align: left;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================= TABLES ================= */
+
+.table-wrapper th {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.table-wrapper td {
+  border-bottom: 1px solid var(--line);
+}
+
+.table-wrapper tbody tr {
+  transition: background 0.15s;
+}
+
+.table-wrapper tbody tr:hover {
+  background: rgba(47, 125, 255, 0.07);
+}
+
+.table-wrapper tbody tr.row-selected {
+  background: rgba(140, 82, 255, 0.12);
+}
+
+/* ---- Attendance: fits the screen, no side-scroll on desktop ---- */
+
+.table-fit table {
+  min-width: 760px;
+  table-layout: auto;
+}
+
+.table-fit th,
+.table-fit td {
+  padding: 11px 14px;
+  white-space: nowrap;
+}
+
+.table-fit td:nth-child(3) { font-weight: 600; }
+
+.table-fit td:nth-child(2),
+.table-fit td:nth-child(7),
+.table-fit td:nth-child(8) {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Pagination ---- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.pager-info {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pager-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pager-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pager-size select {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  padding: 7px 10px;
+  font-family: inherit;
+}
+
+.pager-size select option {
+  background: var(--surface-solid);
+}
+
+.pager-btn {
+  min-width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pager-btn:hover:not(:disabled) {
+  background: rgba(47, 125, 255, 0.2);
+  border-color: var(--blue);
+}
+
+.pager-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pager-page {
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .pager { justify-content: center; }
+  .pager-info { width: 100%; text-align: center; }
+}
+
+/* ================= ACCOUNTS: notifications ================= */
+
+.col-check {
+  width: 1%;
+  padding-right: 0 !important;
+}
+
+.col-check input,
+.accounts-panel input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--violet);
+  cursor: pointer;
+}
+
+.accounts-panel input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.device-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.device-pill.on {
+  background: rgba(140, 82, 255, 0.18);
+  color: #cdb4ff;
+}
+
+.device-pill.off {
+  background: rgba(255, 255, 255, 0.06);
+  color: #7f90c7;
+}
+
+.send-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--line-strong);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.form-ok {
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #8ef0c6;
+  font-size: 13px;
+}
+
+/* ================= MODALS ================= */
+
+.modal {
+  border-radius: var(--r-lg);
+  animation: modalIn 0.28s var(--ease);
+}
+
+.modal-backdrop {
+  animation: fadeBackdrop 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes fadeBackdrop {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ================= CARDS (leaders / follow-up) ================= */
+
+.leader-card,
+.followup-card {
+  border-radius: var(--r-lg);
+  transition: transform 0.25s var(--ease), border-color 0.25s;
+}
+
+.leader-card:hover,
+.followup-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(47, 125, 255, 0.5);
+}
+
+.leader-avatar {
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  font-family: var(--font-display);
+}
+
+/* ================= LOGIN — the one big moment ================= */
+
+.login-card {
+  position: relative;
+  overflow: hidden;
+  max-width: 420px;
+  padding: 40px 32px 30px;
+  border-radius: var(--r-lg);
+  animation: loginIn 0.7s var(--ease) both;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--blue), var(--violet), var(--amber));
+}
+
+.login-eq {
+  display: flex;
+  justify-content: center;
+  height: 34px;
+}
+
+.login-eq .eq {
+  height: 34px;
+  gap: 5px;
+}
+
+.login-eq .eq i {
+  width: 5px;
+  border-radius: 3px;
+}
+
+.login-card h1 {
+  font-size: 30px;
+  font-weight: 800;
+}
+
+@keyframes loginIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.field input,
+.field select,
+.field textarea {
+  border-radius: var(--r-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(47, 125, 255, 0.15);
+  outline: none;
+}
+
+/* ================= REDUCED MOTION ================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* keep print clean */
+@media print {
+  .tab-view { animation: none; }
+}

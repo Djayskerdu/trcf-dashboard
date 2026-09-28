@@ -59,8 +59,21 @@ const ALL_TABS = [
   { name: 'FollowUp', icon: <UserRoundCheck size={18} /> },
   { name: 'QR Scan', icon: <QrCode size={18} /> },
   { name: 'Manage Data', icon: <Database size={18} /> },
-  { name: 'Admin', icon: <Shield size={18} /> },
+  { name: 'Accounts', icon: <Shield size={18} /> },
 ]
+
+const TAB_SUBTITLE = {
+  Homepage: 'Welcome back — let’s keep the Jam going',
+  Dashboard: 'How the youth are showing up',
+  Attendance: 'Who came, when, and who brought them',
+  Events: 'What’s coming up and what’s passed',
+  Leaders: 'Your leaders and the people they’re discipling',
+  Finance: 'Giving records',
+  FollowUp: 'First timers waiting for a friendly hello',
+  'QR Scan': 'Scan a pass to mark attendance',
+  'Manage Data': 'Add, edit and clean up records',
+  Accounts: 'Logins, notifications and activity history',
+}
 
 const getDeviceInfo = () => {
 
@@ -153,6 +166,9 @@ const [selectedEventParticipants,
   useState(null)
 
   const [search, setSearch] = useState('')
+  const [attPage, setAttPage] = useState(1)
+  const [attPageSize, setAttPageSize] = useState(25)
+  const [printAll, setPrintAll] = useState(false)
   
 
   const goPrevMonth = () => {
@@ -305,8 +321,6 @@ const [calendarDate, setCalendarDate] = useState(new Date())
 
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [users, setUsers] = useState([])
-const [selectedUsers, setSelectedUsers] = useState([])
 const [history, setHistory] = useState([])
 const [scanResult, setScanResult] =
   useState(null)
@@ -566,7 +580,6 @@ setEvents(res.events || [])
 setLeaders(res.leaders || [])
 setFollowup(res.followup || [])
 setFinance(res.finance || [])
-setUsers(res.users || [])
 setHistory(
   res.history || []
 )
@@ -770,27 +783,52 @@ const financeChartData = useMemo(() => {
 
   const filteredAttendance = useMemo(() => {
 
-    return attendance.slice(1).filter((row) => {
+    const q = search.trim().toLowerCase()
 
-      const rowDate = formatDate(row[0])
+    return attendance
+      .slice(1)
+      .filter((row) => {
 
-      if (startDate && rowDate !== startDate) {
-        return false
-      }
+        const rowDate = formatDate(row[0])
 
-      if (
-        search &&
-        !row[2]
-          ?.toLowerCase()
-          .includes(search.toLowerCase())
-      ) {
-        return false
-      }
+        if (startDate && rowDate < startDate) return false
+        if (endDate && rowDate > endDate) return false
 
-      return true
-    })
+        if (q && !String(row[2] || '').toLowerCase().includes(q)) {
+          return false
+        }
 
-  }, [attendance, startDate, search])
+        return true
+      })
+
+  }, [attendance, startDate, endDate, search])
+
+  const attTotalPages = Math.max(
+    1,
+    Math.ceil(filteredAttendance.length / attPageSize)
+  )
+
+  const attCurrentPage = Math.min(attPage, attTotalPages)
+
+  const attStart = (attCurrentPage - 1) * attPageSize
+
+  const attendancePageRows = printAll
+    ? filteredAttendance
+    : filteredAttendance.slice(attStart, attStart + attPageSize)
+
+  // back to page 1 whenever the filters change
+  useEffect(() => {
+    setAttPage(1)
+  }, [startDate, endDate, search, attPageSize])
+
+  // print every record, not just the visible page
+  const printAttendance = () => {
+    setPrintAll(true)
+    setTimeout(() => {
+      window.print()
+      setPrintAll(false)
+    }, 150)
+  }
 
   /* ================= EVENTS FILTER ================= */
 
@@ -869,11 +907,15 @@ const financeChartData = useMemo(() => {
 
         <div>
 
-          <div className="logo-wrapper">
+          <div className="brand">
             <img
               src="/Add a heading.png"
+              alt="TRCF Youth Jam"
               className="logo"
             />
+            <span className="brand-name">
+              <Equalizer /> Youth Jam Database
+            </span>
           </div>
 
 <div className="menu">
@@ -946,7 +988,7 @@ const financeChartData = useMemo(() => {
           <div>
             <h1>{activeTab}</h1>
             <p>
-              TRCF Youth Jam Analytics Dashboard
+              {TAB_SUBTITLE[activeTab] || 'TRCF Youth Jam'}
             </p>
           </div>
 
@@ -970,6 +1012,8 @@ const financeChartData = useMemo(() => {
 
         </div>
         
+
+        <div key={activeTab} className="tab-view">
 
         {activeTab === 'Homepage' && (
 
@@ -1286,11 +1330,7 @@ const financeChartData = useMemo(() => {
 
         <button
           className="finance-reset-btn"
-          onClick={() => {
-
-            window.print()
-
-          }}
+          onClick={printAttendance}
         >
           Print Records
         </button>
@@ -1300,7 +1340,7 @@ const financeChartData = useMemo(() => {
     </div>
 
     {/* TABLE */}
-    <div className="table-wrapper">
+    <div className="table-wrapper table-fit">
 
       <table>
 
@@ -1321,12 +1361,12 @@ const financeChartData = useMemo(() => {
 
         <tbody>
 
-          {filteredAttendance.length > 0 ? (
+          {attendancePageRows.length > 0 ? (
 
-            filteredAttendance.map(
+            attendancePageRows.map(
               (row, i) => (
 
-                <tr key={i}>
+                <tr key={attStart + i}>
 
                   <td>
                     {displayDate(row[0])}
@@ -1369,6 +1409,76 @@ const financeChartData = useMemo(() => {
         </tbody>
 
       </table>
+
+    </div>
+
+    {/* PAGINATION */}
+    <div className="pager no-print">
+
+      <div className="pager-info">
+        {filteredAttendance.length === 0
+          ? 'No records'
+          : `Showing ${attStart + 1}–${Math.min(
+              attStart + attPageSize,
+              filteredAttendance.length
+            )} of ${filteredAttendance.length}`}
+      </div>
+
+      <div className="pager-controls">
+
+        <label className="pager-size">
+          <span>Rows</span>
+          <select
+            value={attPageSize}
+            onChange={(e) => setAttPageSize(Number(e.target.value))}
+          >
+            {[15, 25, 50, 100].map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          className="pager-btn"
+          disabled={attCurrentPage === 1}
+          onClick={() => setAttPage(1)}
+          aria-label="First page"
+        >
+          «
+        </button>
+
+        <button
+          className="pager-btn"
+          disabled={attCurrentPage === 1}
+          onClick={() => setAttPage(attCurrentPage - 1)}
+          aria-label="Previous page"
+        >
+          ‹
+        </button>
+
+        <span className="pager-page">
+          Page {attCurrentPage} / {attTotalPages}
+        </span>
+
+        <button
+          className="pager-btn"
+          disabled={attCurrentPage === attTotalPages}
+          onClick={() => setAttPage(attCurrentPage + 1)}
+          aria-label="Next page"
+        >
+          ›
+        </button>
+
+        <button
+          className="pager-btn"
+          disabled={attCurrentPage === attTotalPages}
+          onClick={() => setAttPage(attTotalPages)}
+          aria-label="Last page"
+        >
+          »
+        </button>
+
+      </div>
 
     </div>
 
@@ -3081,152 +3191,20 @@ fontWeight: 'bold',
 
 
 {/* =========================
-    ADMIN CONTROL PANEL
+    ACCOUNTS (login + notifications) + HISTORY
 ========================== */}
 
-  {activeTab === 'Admin' && (
+  {activeTab === 'Accounts' && (
 
     <>
 
       {isLeader && <AccountsPanel me={session.user} />}
 
-      <div className="glass panel">
-
-        {!isLeader ? (
-
+      {!isLeader && (
+        <div className="glass panel">
           <h3>Access Denied (Leader Only)</h3>
-
-        ) : (
-
-          <>
-
-            <div className="panel-header">
-
-              <div>
-
-                <h3>Admin Control Panel</h3>
-
-                <p className="attendance-count">
-                  Total Users: {users.slice(1).length}
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="table-wrapper">
-
-              <table>
-
-                <thead>
-
-                  <tr>
-                    <th>Select</th>
-                    <th>Name</th>
-                    <th>Gender</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {users.slice(1).map((u, i) => {
-
-                    const id = u[3]
-
-                    return (
-
-                      <tr key={i}>
-
-                        <td>
-
-                          <input
-                            type="checkbox"
-                            onChange={(e) => {
-
-                              if (e.target.checked) {
-
-                                setSelectedUsers(prev => [
-                                  ...prev,
-                                  id
-                                ])
-
-                              } else {
-
-                                setSelectedUsers(prev =>
-                                  prev.filter(x => x !== id)
-                                )
-
-                              }
-
-                            }}
-                          />
-
-                        </td>
-
-                        <td>{u[0]}</td>
-                        <td>{u[1]}</td>
-                        <td>{u[2]}</td>
-                        <td>{u[4]}</td>
-
-                      </tr>
-
-                    )
-
-                  })}
-
-                </tbody>
-
-              </table>
-
-            </div>
-
-            <br />
-
-            <button
-  className="reset-btn"
-  onClick={async () => {
-
-    const selectedData = users
-  .slice(1)
-  .filter(u => selectedUsers.includes(u[3]))
-
-const ids =
-  selectedData.map(u => u[3]).join(",")
-
-    if (!ids) {
-      alert("Select at least one user first")
-      return
-    }
-
-    try {
-
-      const data = await api('notify', {
-        ids: selectedData.map(u => u[3]),
-      })
-
-      alert(`✅ Reminder sent to ${data.sent} device(s)`)
-
-    } catch (err) {
-
-      console.error(err)
-
-      alert("❌ " + err.message)
-
-    }
-
-  }}
->
-  Send Reminder
-</button>
-
-          </>
-
-        )}
-
-      </div>
+        </div>
+      )}
 
 {/* =========================
   HISTORY LOGS PANEL
@@ -3437,6 +3415,8 @@ const ids =
     </>
 
   )}
+        </div>
+
       </section>
 
     </main>
@@ -3458,10 +3438,12 @@ function MenuItem({
 
   return (
 
-    <div
+    <button
+      type="button"
       className={`menu-item ${
         active ? 'active' : ''
       }`}
+      aria-current={active ? 'page' : undefined}
       onClick={onClick}
     >
 
@@ -3469,8 +3451,61 @@ function MenuItem({
 
       <span>{text}</span>
 
-    </div>
+    </button>
   )
+}
+
+/* the "Jam" motif: five equalizer bars */
+function Equalizer({ live = false }) {
+  return (
+    <span className={`eq ${live ? 'live' : ''}`} aria-hidden="true">
+      <i /><i /><i /><i /><i />
+    </span>
+  )
+}
+
+/* counts up once when the number appears or changes */
+function CountUp({ value }) {
+
+  const [shown, setShown] = useState(
+    typeof value === 'number' ? 0 : value
+  )
+
+  useEffect(() => {
+
+    if (typeof value !== 'number') {
+      setShown(value)
+      return
+    }
+
+    const reduce =
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (reduce || value === 0) {
+      setShown(value)
+      return
+    }
+
+    let raf
+    const t0 = performance.now()
+    const dur = 700
+
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setShown(Math.round(value * eased))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+
+    raf = requestAnimationFrame(tick)
+
+    return () => cancelAnimationFrame(raf)
+
+  }, [value])
+
+  return typeof shown === 'number'
+    ? shown.toLocaleString()
+    : shown
 }
 
 function StatCard({
@@ -3487,7 +3522,7 @@ function StatCard({
 
         <p>{title}</p>
 
-        <h2>{value}</h2>
+        <h2><CountUp value={value} /></h2>
 
       </div>
 

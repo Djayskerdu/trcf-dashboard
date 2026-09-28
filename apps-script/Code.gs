@@ -108,7 +108,7 @@ const TABLES = {
 // What each role may read / write. Keep in sync with app/lib/access.js
 const ROLES = {
   leader: {
-    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'users', 'history'],
+    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'history'],
     write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance'],
     ops: ['add', 'update', 'delete'],
     manageAccounts: true, notify: true, mail: true,
@@ -334,13 +334,38 @@ function requireLeader_(user) {
 
 function listAccounts_(user) {
   requireLeader_(user)
+  const devices = devicesByAccount_()
   return {
     success: true,
     accounts: readAccounts_().map(a => ({
       username: a.username, name: a.name, role: a.role, status: a.status,
       created: a.created, lastLogin: a.lastLogin,
+      devices: (devices[a.username] || []).length,
     })),
   }
+}
+
+/**
+ * Users sheet = one row per registered push device:
+ *   A Name | B Gender | C Role | D OneSignalId | E Status | F Device | G Browser | H Date | I Username
+ * Column I (Username) is written by saveDevice_. Older rows without it are matched
+ * to an account by name ("Jay Abraham (TABLET)" -> "Jay Abraham").
+ */
+function devicesByAccount_() {
+  const rows = rawSheet_(SpreadsheetApp.getActiveSpreadsheet(), 'Users').slice(1)
+  const accounts = readAccounts_()
+  const byName = {}
+  accounts.forEach(a => { byName[a.name.trim().toLowerCase()] = a.username })
+  const out = {}
+  rows.forEach(r => {
+    const id = String(r[3] || '').trim()
+    if (!id || String(r[4] || '').trim().toLowerCase() === 'disabled') return
+    let u = String(r[8] || '').trim().toLowerCase()
+    if (!u) u = byName[String(r[0] || '').replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase()] || ''
+    if (!u) return
+    ;(out[u] = out[u] || []).push(id)
+  })
+  return out
 }
 
 function createAccount_(user, req) {
@@ -448,7 +473,6 @@ function getData_(user) {
     }))
   }
   if (has('ygl'))     out.youthgetloud = rawSheet_(ss, 'YOUTH-GET-LOUD 2026')
-  if (has('users'))   out.users = rawSheet_(ss, 'Users')
   if (has('history')) out.history = rawSheet_(ss, 'HISTORY_LOG')
   return out
 }
@@ -820,35 +844,51 @@ function notify_(user, req) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('ONESIGNAL_API_KEY')
   if (!apiKey) return { success: false, error: 'ONESIGNAL_API_KEY is not set in Script properties' }
 
-  const ids = (Array.isArray(req.ids) ? req.ids : []).map(String).filter(Boolean)
-  if (!ids.length) return { success: false, error: 'No users selected' }
+  const usernames = (Array.isArray(req.usernames) ? req.usernames : [])
+    .map(u => String(u).trim().toLowerCase()).filter(Boolean)
+  if (!usernames.length) return { success: false, error: 'No accounts selected' }
 
-  const users = rawSheet_(SpreadsheetApp.getActiveSpreadsheet(), 'Users')
-  const nameById = {}
-  users.slice(1).forEach(r => { nameById[String(r[3])] = String(r[0] || '').replace(/\s*\(.*\)\s*$/, '') })
+  const accounts = readAccounts_()
+  const devices = devicesByAccount_()
+  const requests = []
+  const reached = {}
 
-  const requests = ids.map(id => {
-    const name = nameById[id] || 'friend'
-    return {
-      url: 'https://api.onesignal.com/notifications',
-      method: 'post',
-      contentType: 'application/json',
-      headers: { Authorization: 'Key ' + apiKey },
-      muteHttpExceptions: true,
-      payload: JSON.stringify({
-        app_id: CFG.ONESIGNAL_APP_ID,
-        include_subscription_ids: [id],
-        target_channel: 'push',
-        headings: { en: 'TRCF Youth Jam Reminder' },
-        contents: { en: 'Hi, ' + name + '! Please don\'t forget to update our Youth Jam Database 🙌 Thank you, ' + name + '. God bless you! ❤️' },
-      }),
-    }
+  usernames.forEach(u => {
+    const acct = accounts.filter(a => a.username === u)[0]
+    if (!acct || acct.status !== 'active') return
+    const name = acct.name.split(' ')[0] || 'friend'
+    ;(devices[u] || []).forEach(id => {
+      reached[u] = true
+      requests.push({
+        url: 'https://api.onesignal.com/notifications',
+        method: 'post',
+        contentType: 'application/json',
+        headers: { Authorization: 'Key ' + apiKey },
+        muteHttpExceptions: true,
+        payload: JSON.stringify({
+          app_id: CFG.ONESIGNAL_APP_ID,
+          include_subscription_ids: [id],
+          target_channel: 'push',
+          headings: { en: 'TRCF Youth Jam Reminder' },
+          contents: { en: 'Hi, ' + name + '! Please don\'t forget to update our Youth Jam Database 🙌 Thank you, ' + name + '. God bless you! ❤️' },
+        }),
+      })
+    })
   })
+
+  const noDevice = usernames.filter(u => !reached[u])
+  if (!requests.length) {
+    return { success: false, error: 'None of the selected accounts has a device registered for notifications yet. They need to log in on the installed app first.' }
+  }
 
   const results = UrlFetchApp.fetchAll(requests)
   const ok = results.filter(r => r.getResponseCode() < 300).length
-  log_(user, 'ADD', 'Users', 'Sent reminder to ' + ok + '/' + ids.length + ' devices')
-  return { success: ok > 0, sent: ok, total: ids.length, error: ok ? '' : 'OneSignal rejected the request' }
+  log_(user, 'ADD', 'Users', 'Sent reminder to ' + Object.keys(reached).join(', ') + ' (' + ok + '/' + requests.length + ' devices)')
+  return {
+    success: ok > 0, sent: ok, total: requests.length,
+    accounts: Object.keys(reached).length, skipped: noDevice,
+    error: ok ? '' : 'OneSignal rejected the request',
+  }
 }
 
 function saveDevice_(user, req) {
@@ -861,14 +901,17 @@ function saveDevice_(user, req) {
     const data = sh.getDataRange().getValues()
     for (let i = 1; i < data.length; i++) {
       if (String(data[i][3]) === id) {
+        // same device, possibly a different person logging in: re-link it to this account
         const n = String(data[i][0] || '').trim()
         if (!n || n === 'Unknown User') sh.getRange(i + 1, 1).setValue(user.name)
+        sh.getRange(i + 1, 3).setValue(user.role)
+        sh.getRange(i + 1, 9).setValue(user.username)
         return { success: true }
       }
     }
     sh.appendRow([
       user.name, '', user.role, id, 'active',
-      safeText_(String(req.device || '').slice(0, 40)), safeText_(String(req.browser || '').slice(0, 200)), new Date(),
+      safeText_(String(req.device || '').slice(0, 40)), safeText_(String(req.browser || '').slice(0, 200)), new Date(), user.username,
     ])
     return { success: true }
   } finally {
