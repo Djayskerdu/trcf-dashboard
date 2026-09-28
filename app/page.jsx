@@ -1,6 +1,5 @@
 'use client'
 
-import axios from 'axios'
 import { Html5QrcodeScanner } from 'html5-qrcode'
 import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
@@ -23,7 +22,17 @@ import {
   LayoutDashboard,
   HandCoins,
   UserRoundCheck,
+  Database,
+  LogOut,
+  KeyRound,
 } from 'lucide-react'
+
+import LoginScreen from './components/LoginScreen'
+import ManageData from './components/ManageData'
+import AccountsPanel from './components/AccountsPanel'
+import ChangePassword from './components/ChangePassword'
+import { api, loadSession, saveSession, clearSession } from './lib/api'
+import { ROLE_TABS } from './lib/access'
 
 import CalendarView from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
@@ -40,8 +49,18 @@ import {
   Bar,
 } from 'recharts'
 
-const API_URL =
-  'https://script.google.com/macros/s/AKfycbyOrJ6PAmXP9jxNfaLA8Mnfzl0z8eZYm-4lbkV7XGFDCYJqqG06hTtSt7bYj-vql50/exec'
+const ALL_TABS = [
+  { name: 'Homepage', icon: <Home size={18} /> },
+  { name: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+  { name: 'Attendance', icon: <ClipboardList size={18} /> },
+  { name: 'Events', icon: <Calendar size={18} /> },
+  { name: 'Leaders', icon: <Users size={18} /> },
+  { name: 'Finance', icon: <HandCoins size={18} /> },
+  { name: 'FollowUp', icon: <UserRoundCheck size={18} /> },
+  { name: 'QR Scan', icon: <QrCode size={18} /> },
+  { name: 'Manage Data', icon: <Database size={18} /> },
+  { name: 'Admin', icon: <Shield size={18} /> },
+]
 
 const getDeviceInfo = () => {
 
@@ -73,45 +92,23 @@ const getDeviceInfo = () => {
   }
 }
 
-export default function Page() {
-  const [currentUser, setCurrentUser] =
-  useState('')
-  useEffect(() => {
-  const saved =
-    localStorage.getItem("currentUser")
-
-  if (saved) {
-    setCurrentUser(saved)
-  }
-}, [])
+function Dashboard({ session, onLogout, onSessionUpdate }) {
+  const role = session.user.role
+  const isLeader = role === 'leader'
+  const isAdmin = role === 'admin'
+  const [showPassword, setShowPassword] = useState(false)
+  const [refs, setRefs] = useState({})
 
 const handleSendFirstTimersBulk = async () => {
 
   try {
 
-    const url =
-      `${API_URL}?action=sendFirstTimersBulk&date=${startDate}`
+    const data = await api('sendWelcomeQR', { date: startDate })
 
-    console.log("SENDING TO:", url)
-
-    const res = await fetch(url, {
-      method: 'GET',
-    })
-
-    const data = await res.json()
-
-    console.log(data)
-
-    if (data.success) {
-
-      alert(
-        `✅ Welcome QR sent to ${data.total} people`
-      )
-
-    } else {
-
-      alert("❌ Failed to send")
-    }
+    alert(
+      `✅ Welcome QR sent to ${data.total} people` +
+      (data.failed ? ` (${data.failed} failed)` : '')
+    )
 
   } catch (err) {
 
@@ -310,9 +307,7 @@ const [calendarDate, setCalendarDate] = useState(new Date())
   const [endDate, setEndDate] = useState('')
   const [users, setUsers] = useState([])
 const [selectedUsers, setSelectedUsers] = useState([])
-const [isLeader, setIsLeader] = useState(false)
 const [history, setHistory] = useState([])
-const [isAdmin, setIsAdmin] = useState(false)
 const [scanResult, setScanResult] =
   useState(null)
 
@@ -426,9 +421,7 @@ const [scannerError, setScannerError] =
           await scanner.clear()
 
           // SAVE ATTENDANCE
-          await fetch(
-            `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`
-          )
+          await api('scan', { id: memberId })
 
         } catch (err) {
           console.log(err)
@@ -493,102 +486,46 @@ const [scannerError, setScannerError] =
 
 useEffect(() => {
 
-  if (!users.length) return
+  // attach this device's push subscription to the logged-in account
+  if (typeof window === 'undefined') return
 
-  async function checkLeader() {
+  const standalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
 
-    if (!window.OneSignal) return
+  if (!standalone) return
 
-    const subId =
-      window.OneSignal?.User
-        ?.PushSubscription?.id
+  let tries = 0
 
-    console.log("CURRENT DEVICE ID:", subId)
+  const timer = setInterval(async () => {
 
-    if (!subId) {
-      setIsLeader(false)
-      return
+    tries++
+
+    const sub = window.OneSignal?.User?.PushSubscription
+
+    if (sub?.id && sub.optedIn) {
+
+      clearInterval(timer)
+
+      const { device, browser } = getDeviceInfo()
+
+      try {
+        await api('saveDevice', {
+          onesignalId: sub.id,
+          device,
+          browser,
+        })
+      } catch (err) {
+        console.log(err)
+      }
+
+    } else if (tries > 20) {
+      clearInterval(timer)
     }
 
-    const foundUser = users
-      .slice(1)
-      .find(u => u[3] === subId)
+  }, 1500)
 
-    console.log("FOUND USER:", foundUser)
-
-    if (!foundUser) {
-      setIsLeader(false)
-      return
-    }
-
-    const role =
-      (foundUser[2] || "")
-        .toString()
-        .trim()
-        .toLowerCase()
-
-    console.log("ROLE:", role)
-
-    setIsLeader(role === "leader")
-setIsAdmin(role === "admin")
-  }
-
-  checkLeader()
-
-}, [users])
-
-useEffect(() => {
-
-  async function setupUser() {
-
-    if (!window.OneSignal) return
-
-    const isInstalled =
-      window.matchMedia('(display-mode: standalone)').matches
-
-    if (!isInstalled) return
-
-  const subscriptionId =
-  window.OneSignal?.User
-    ?.PushSubscription?.id
-
-console.log(
-  "ONESIGNAL ID:",
-  subscriptionId
-)
-
-if (!subscriptionId) {
-  console.log("NO SUBSCRIPTION ID")
-  return
-}
-
-    const response = await fetch("/api/saveUser", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    name: '',
-    gender: '',
-    role: 'staff',
-    onesignalId: subscriptionId,
-    status: 'active',
-    device: /Android|iPhone/i.test(navigator.userAgent)
-      ? 'Mobile'
-      : 'Desktop',
-    browser: navigator.userAgent,
-  }),
-})
-
-const result = await response.json()
-
-console.log(result)
-
-alert("✅ User saved!")
-
-  }
-
-  setupUser()
+  return () => clearInterval(timer)
 
 }, [])
 
@@ -620,25 +557,24 @@ useEffect(() => {
 
     try {
 
-      const res = await axios.get(
-  `${API_URL}?t=${Date.now()}`
-)
+      const res = await api('getData')
 
-      setAttendance(res.data.attendance || [])
-setEvents(res.data.events || [])
-setLeaders(res.data.leaders || [])
-setFollowup(res.data.followup || [])
-setFinance(res.data.finance || [])
-setUsers(res.data.users || [])
+      setRefs(res.refs || {})
+
+      setAttendance(res.attendance || [])
+setEvents(res.events || [])
+setLeaders(res.leaders || [])
+setFollowup(res.followup || [])
+setFinance(res.finance || [])
+setUsers(res.users || [])
 setHistory(
-  res.data.history || []
+  res.history || []
 )
-setMembers(res.data.members || [])
+setMembers(res.members || [])
       setYouthGetLoud(
-  res.data.youthgetloud || []
+  res.youthgetloud || []
 )
-      setYglParticipants(res.data.youthgetloud || [])
-      console.log(res.data.finance)
+      setYglParticipants(res.youthgetloud || [])
 
     } catch (err) {
 
@@ -942,69 +878,9 @@ const financeChartData = useMemo(() => {
 
 <div className="menu">
 
-  {[
-    {
-      name: 'Homepage',
-      icon: <Home size={18} />,
-    },
-    // ONLY SHOW DASHBOARD
-    // IF LEADER OR ADMIN
-    ...(isLeader || isAdmin
-      ? [{
-          name: 'Dashboard',
-          icon: <LayoutDashboard size={18} />,
-        }]
-      : []),
-
-    {
-      name: 'Attendance',
-      icon: <ClipboardList size={18} />,
-    },
-    {
-      name: 'Events',
-      icon: <Calendar size={18} />,
-    },
-    {
-      name: 'Leaders',
-      icon: <Users size={18} />,
-    },
-    // ONLY SHOW FINANCE
-// IF LEADER OR ADMIN
-...(isLeader
-  ? [{
-      name: 'Finance',
-      icon: <HandCoins size={18} />,
-    }]
-  : []),
-
-    // ONLY SHOW FOLLOWUP
-    // IF LEADER OR ADMIN
-    ...(isLeader || isAdmin
-      ? [{
-          name: 'FollowUp',
-          icon: <UserRoundCheck size={18} />,
-        }]
-      : []),
-
-    // ONLY SHOW QR SCAN
-    // IF ADMIN
-    ...(isLeader || isAdmin
-      ? [{
-          name: 'QR Scan',
-          icon: <QrCode size={18} />,
-        }]
-      : []),
-
-    // ONLY SHOW ADMIN
-    // IF LEADER OR ADMIN
-    ...(isLeader
-      ? [{
-          name: 'Admin',
-          icon: <Shield size={18} />,
-        }]
-      : []),
-
-  ].map((tab) => (
+  {ALL_TABS.filter((t) =>
+    ROLE_TABS[role].includes(t.name)
+  ).map((tab) => (
 
     <MenuItem
       key={tab.name}
@@ -1025,7 +901,41 @@ const financeChartData = useMemo(() => {
 
         </div>
 
+        <div className="sidebar-user">
+
+          <div className="sidebar-user-info">
+            <strong>{session.user.name}</strong>
+            <span className={`role-badge ${role}`}>{role}</span>
+          </div>
+
+          <button
+            className="sidebar-link"
+            onClick={() => setShowPassword(true)}
+          >
+            <KeyRound size={16} /> Change password
+          </button>
+
+          <button
+            className="sidebar-link"
+            onClick={onLogout}
+          >
+            <LogOut size={16} /> Log out
+          </button>
+
+        </div>
+
       </aside>
+
+      {showPassword && (
+        <ChangePassword
+          onClose={() => setShowPassword(false)}
+          onDone={(next) => {
+            onSessionUpdate(next)
+            setShowPassword(false)
+            alert('✅ Password updated')
+          }}
+        />
+      )}
 
       {/* CONTENT */}
       <section className="content">
@@ -2737,7 +2647,26 @@ underRaw
 )}
 
 {/* QR SCANNER */}
-{activeTab === 'QR Scan' && (
+{activeTab === 'Manage Data' && (
+
+  <ManageData
+    role={role}
+    refs={refs}
+    search={search}
+    onChanged={fetchData}
+    data={{
+      attendance,
+      members,
+      followup,
+      events,
+      leaders,
+      finance,
+    }}
+  />
+
+)}
+
+        {activeTab === 'QR Scan' && (
 
   !(isLeader || isAdmin) ? (
 
@@ -2917,9 +2846,7 @@ underRaw
 
                               await newScanner.clear()
 
-                              await fetch(
-                                `${API_URL}?action=scan&id=${encodeURIComponent(memberId)}&key=TRCF_SECRET_2026`
-                              )
+                              await api('scan', { id: memberId })
 
                             } catch (err) {}
 
@@ -3161,6 +3088,8 @@ fontWeight: 'bold',
 
     <>
 
+      {isLeader && <AccountsPanel me={session.user} />}
+
       <div className="glass panel">
 
         {!isLeader ? (
@@ -3267,38 +3196,24 @@ fontWeight: 'bold',
 const ids =
   selectedData.map(u => u[3]).join(",")
 
-const name =
-  selectedData.map(u => u[0]).join(",")
-
-    const url =
-  `${API_URL}?action=notify&ids=${encodeURIComponent(ids)}&name=${encodeURIComponent(name)}`
+    if (!ids) {
+      alert("Select at least one user first")
+      return
+    }
 
     try {
 
-      const res = await fetch(url, {
-        method: "GET"
+      const data = await api('notify', {
+        ids: selectedData.map(u => u[3]),
       })
 
-      const data = await res.json()
-
-      console.log(data)
-
-      if (data.id) {
-
-        alert("✅ Notification Sent!")
-
-      } else {
-
-        alert("❌ Notification Failed")
-
-        console.log(data)
-      }
+      alert(`✅ Reminder sent to ${data.sent} device(s)`)
 
     } catch (err) {
 
       console.error(err)
 
-      alert("❌ Failed")
+      alert("❌ " + err.message)
 
     }
 
@@ -3577,5 +3492,54 @@ function StatCard({
       </div>
 
     </div>
+  )
+}
+
+/* ================= LOGIN GATE ================= */
+
+export default function Page() {
+
+  // undefined = still checking localStorage, null = logged out
+  const [session, setSession] = useState(undefined)
+
+  useEffect(() => {
+
+    setSession(loadSession())
+
+    const expired = () => setSession(null)
+
+    window.addEventListener('trcf-auth-expired', expired)
+
+    return () =>
+      window.removeEventListener('trcf-auth-expired', expired)
+
+  }, [])
+
+  if (session === undefined) {
+    return <main className="login-page" />
+  }
+
+  if (!session) {
+
+    return (
+      <LoginScreen
+        onLogin={(next) => {
+          saveSession(next)
+          setSession(next)
+        }}
+      />
+    )
+  }
+
+  return (
+    <Dashboard
+      key={session.user.username}
+      session={session}
+      onSessionUpdate={setSession}
+      onLogout={() => {
+        clearSession()
+        setSession(null)
+      }}
+    />
   )
 }
