@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { UserPlus, Phone, Pencil, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Phone, Pencil, Trash2, AlertTriangle, Check } from 'lucide-react'
 import Modal from './Modal'
 import { api } from '../lib/api'
 import { ymd } from '../lib/tables'
@@ -39,17 +39,13 @@ const phoneOf = (raw) => {
   return digits.length === 10 && digits.startsWith('9') ? '0' + digits : digits
 }
 
-const EMPTY = { name: '', age: '', gender: '', invited: '', leader: '', markPresent: true }
-
 export default function Consolidation({ me, members, leaders, consolidation, refs, attendance, onChanged }) {
   const isManager = CONSO_MANAGERS.includes(me.role)
   const canDelete = isManager
 
   const [date, setDate] = useState(() => ymd(new Date()))
-  const [form, setForm] = useState(EMPTY)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   const [edit, setEdit] = useState(null) // entry being edited
   const [editError, setEditError] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -114,37 +110,6 @@ export default function Consolidation({ me, members, leaders, consolidation, ref
   }, [entries, statusFilter, leaderByName])
 
   const toValues = (e) => [e.day, e.name, e.age, e.gender, e.invited, e.leader, e.status, e.notes, '', '']
-
-  const add = async (ev) => {
-    ev.preventDefault()
-    const name = form.name.replace(/\s+/g, ' ').trim()
-    if (!name) return
-    if (!form.leader) { setError('Choose the leader who will follow up.'); return }
-    if (entries.some((e) => norm(e.name) === norm(name) && e.day === date)) {
-      setError(`${name} is already listed for ${prettyDay(date)}.`)
-      return
-    }
-    setBusy(true)
-    setError('')
-    setNotice('')
-    try {
-      await api('add', {
-        table: 'consolidation',
-        values: [date, name, form.age, form.gender, form.invited.trim(), form.leader, 'PENDING', '', '', ''],
-      })
-      let extra = ''
-      if (form.markPresent) {
-        try { await api('setPresent', { name, date, present: true }) } catch (err) { extra = ` (saved, but attendance failed: ${err.message})` }
-      }
-      setNotice(`${name} assigned to ${form.leader}.${extra}`)
-      setForm({ ...EMPTY, leader: form.leader, markPresent: form.markPresent }) // keep leader: same leader often gets several
-      await onChanged()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setBusy(false)
-    }
-  }
 
   const saveEdit = async (ev) => {
     ev.preventDefault()
@@ -227,7 +192,7 @@ export default function Consolidation({ me, members, leaders, consolidation, ref
           <p className="attendance-count">
             {isManager
               ? 'Every first timer and the leader assigned to follow them up. Change the status as leaders report back.'
-              : 'Type each first timer, then choose the leader who will follow them up.'}
+              : 'First timers entered on the First Timers page. Tap the pencil to fix a typo.'}
           </p>
         </div>
         <div className="date-input-group">
@@ -252,53 +217,13 @@ export default function Consolidation({ me, members, leaders, consolidation, ref
       </div>
 
       {error && <div className="form-error" role="alert">{error}</div>}
-      {notice && <div className="form-ok" role="status">{notice}</div>}
-
-      {/* ---------- Entry form ---------- */}
-      <form onSubmit={add} className="conso-form">
-        <label className="field">
-          <span>Full name <em className="req">*</em></span>
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        </label>
-        <label className="field">
-          <span>Age</span>
-          <input type="number" min="1" max="99" inputMode="numeric" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} />
-        </label>
-        <label className="field">
-          <span>Gender</span>
-          <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
-            <option value="">—</option>
-            <option>Male</option>
-            <option>Female</option>
-          </select>
-        </label>
-        <label className="field">
-          <span>Who invited</span>
-          <input list="conso-inviters" value={form.invited} onChange={(e) => setForm({ ...form, invited: e.target.value })} />
-          <datalist id="conso-inviters">{inviterNames.map((n) => <option key={n} value={n} />)}</datalist>
-        </label>
-        <label className="field">
-          <span>Leader to follow up <em className="req">*</em></span>
-          <select value={form.leader} onChange={(e) => setForm({ ...form, leader: e.target.value })} required>
-            <option value="">Choose a leader…</option>
-            {leaderList.map((l) => <option key={l.name} value={l.name}>{l.name}</option>)}
-          </select>
-        </label>
-        <label className="conso-check">
-          <input type="checkbox" checked={form.markPresent} onChange={(e) => setForm({ ...form, markPresent: e.target.checked })} />
-          Also mark present in Attendance
-        </label>
-        <button className="reset-btn conso-submit" disabled={busy || !form.name.trim() || !form.leader}>
-          <UserPlus size={16} /> {busy ? 'Saving…' : 'Assign first timer'}
-        </button>
-      </form>
 
       {/* ---------- Conso Staff: today's list ---------- */}
       {!isManager && (
         <div className="conso-list">
           <h4>Assigned on {prettyDay(date)} ({todays.length})</h4>
           {todays.map((e) => entryRow(e, true))}
-          {!todays.length && <p className="rm-empty">Nobody assigned for this date yet.</p>}
+          {!todays.length && <p className="rm-empty">Nobody assigned for this date yet. Add them on the First Timers page.</p>}
         </div>
       )}
 
@@ -331,7 +256,7 @@ export default function Consolidation({ me, members, leaders, consolidation, ref
                 </div>
                 <div className="conso-leader-side">
                   {g.late > 0 && <span className="rm-flag"><AlertTriangle size={12} /> {g.late} waiting {LATE_DAYS}+ days</span>}
-                  {g.open === 0 && <span className="conso-allgood"><CheckCircle2 size={14} /> All done</span>}
+                  {g.open === 0 && <span className="conso-allgood"><Check size={14} /> All done</span>}
                   {g.open > 0 && <span className="conso-count">{g.open} open</span>}
                   {g.info?.contact && (
                     <a className="rm-chip" href={`tel:${g.info.contact}`}><Phone size={12} /> {g.info.contact}</a>
@@ -362,6 +287,7 @@ export default function Consolidation({ me, members, leaders, consolidation, ref
             </label>
             <label className="field"><span>Who invited</span>
               <input list="conso-inviters" value={edit.invited} onChange={(e) => setEdit({ ...edit, invited: e.target.value })} />
+              <datalist id="conso-inviters">{inviterNames.map((n) => <option key={n} value={n} />)}</datalist>
             </label>
             <label className="field"><span>Leader to follow up</span>
               <select value={edit.leader} required onChange={(e) => setEdit({ ...edit, leader: e.target.value })}>

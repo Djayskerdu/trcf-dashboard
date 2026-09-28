@@ -76,7 +76,7 @@ const TAB_SUBTITLE = {
   Dashboard: 'How the youth are showing up',
   Attendance: 'Who came and when',
   'Regular Members': 'Tick who’s here today — spot who needs a follow-up',
-  'First Timers': 'Type in today’s first timers',
+  'First Timers': 'Type in today’s first timers and assign a leader',
   Consolidation: 'Assign first timers to a leader and track the follow-up',
   Events: 'What’s coming up and what’s passed',
   Leaders: 'Your leaders and the people they’re discipling',
@@ -1492,8 +1492,12 @@ const financeChartData = useMemo(() => {
 {/* FIRST TIMERS (consolidation team) */}
 {activeTab === 'First Timers' && (
   <FirstTimers
+    me={session.user}
     members={members}
+    leaders={leaders}
     attendance={attendance}
+    consolidation={consolidation}
+    refs={refs}
     onChanged={fetchData}
   />
 )}
