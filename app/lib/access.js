@@ -4,9 +4,10 @@
 export const ROLE_TABS = {
   leader: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Consolidation', 'Events', 'Leaders', 'Finance', 'FollowUp', 'QR Scan', 'Manage Data', 'Accounts'],
   admin: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'Consolidation', 'Events', 'Leaders', 'Finance', 'FollowUp', 'QR Scan', 'Manage Data'],
-  conso_head: ['Homepage', 'Regular Members', 'First Timers', 'Consolidation', 'Attendance', 'Events', 'Leaders'],
-  conso_staff: ['Homepage', 'Regular Members', 'First Timers', 'Consolidation', 'Attendance', 'Events', 'Leaders'],
-  staff: ['Homepage', 'Regular Members', 'Attendance', 'Events', 'Leaders', 'Manage Data'],
+  conso_head: ['Homepage', 'Attendance', 'First Timers', 'Consolidation'],
+  conso_staff: ['Homepage', 'Attendance', 'First Timers', 'Consolidation'],
+  staff: ['Homepage', 'Attendance', 'Leaders', 'Events'],                 // view only
+  attendance_staff: ['Homepage', 'Attendance', 'Regular Members'],        // ticks regular members present
 }
 // Accounts created before the split keep working as Conso Staff.
 ROLE_TABS.consolidation = ROLE_TABS.conso_staff
@@ -14,7 +15,8 @@ ROLE_TABS.consolidation = ROLE_TABS.conso_staff
 export const ROLE_WRITE = {
   leader: { tables: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'], ops: ['add', 'update', 'delete'] },
   admin: { tables: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'], ops: ['add', 'update', 'delete'] },
-  staff: { tables: ['attendance'], ops: ['add'] },
+  staff: { tables: [], ops: [] },
+  attendance_staff: { tables: ['attendance'], ops: ['add'] },
   conso_head: { tables: ['consolidation'], ops: ['add', 'update', 'delete'] },
   conso_staff: { tables: ['consolidation'], ops: ['add', 'update'] },
 }
@@ -27,6 +29,7 @@ export const ROLE_LABEL = {
   leader: 'Leader',
   admin: 'Admin',
   staff: 'Staff',
+  attendance_staff: 'Attendance Staff',
   conso_head: 'Conso Head',
   conso_staff: 'Conso Staff',
   consolidation: 'Conso Staff',

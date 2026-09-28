@@ -129,7 +129,14 @@ const ROLES = {
     ops: ['add', 'update', 'delete'],
     mail: true, checkin: true, firstTimer: true,
   },
+  // Staff: view only (Homepage, Attendance, Leaders, Events). Cannot check anyone in.
   staff: {
+    read: ['attendance', 'members', 'events', 'leaders', 'ygl'],
+    write: [],
+    ops: [],
+  },
+  // Attendance Staff: ticks Regular Members present (Homepage, Attendance, Regular Members).
+  attendance_staff: {
     read: ['attendance', 'members', 'events', 'leaders', 'ygl'],
     write: ['attendance'],
     ops: ['add'],
@@ -495,8 +502,8 @@ function getData_(user) {
   ;['members', 'followup', 'events', 'leaders', 'consolidation'].forEach(k => {
     if (!has(k)) return
     const t = readTable_(ss.getSheetByName(TABLES[k].sheet), TABLES[k], k === 'events')
-    if (k === 'members' && user.role === 'staff') {
-      t.rows.forEach((r, i) => { if (i > 0) { r[4] = ''; r[5] = '' } })   // no contact / email for the attendance team
+    if (k === 'members' && ['staff', 'attendance_staff', 'conso_head', 'conso_staff', 'consolidation'].indexOf(user.role) > -1) {
+      t.rows.forEach((r, i) => { if (i > 0) { r[4] = ''; r[5] = '' } })   // no contact / email for the attendance and consolidation teams
     }
     out[k] = t.rows; refs[k] = t.refs
   })

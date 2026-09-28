@@ -8,7 +8,8 @@ import { api } from '../lib/api'
 const ROLE_HELP = {
   leader: 'Full access, manages accounts',
   admin: 'Manage all data, no account control',
-  staff: 'View + add attendance only',
+  staff: 'View only: attendance, leaders, events',
+  attendance_staff: 'Ticks regular members present',
   conso_head: 'Follows up the leaders of first timers',
   conso_staff: 'Types first timers + assigns a leader',
 }
