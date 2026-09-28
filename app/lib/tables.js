@@ -15,7 +15,7 @@ export const TABLES = {
       { name: 'Date', type: 'date', req: true, today: true },
       { name: 'Full Name', req: true },
     ],
-    note: 'Tip: for a normal Friday, tick names on the Regular Members page instead.',
+    note: 'Tip: for a normal Friday, tick names on the Regular Members page; first timers are typed on the First Timers page.',
   },
 
   members: {

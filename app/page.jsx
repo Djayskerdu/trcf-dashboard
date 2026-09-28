@@ -26,11 +26,13 @@ import {
   LogOut,
   KeyRound,
   ClipboardCheck,
+  UserPlus,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
 import ManageData from './components/ManageData'
 import RegularMembers from './components/RegularMembers'
+import FirstTimers from './components/FirstTimers'
 import AccountsPanel from './components/AccountsPanel'
 import ChangePassword from './components/ChangePassword'
 import { api, loadSession, saveSession, clearSession } from './lib/api'
@@ -56,6 +58,7 @@ const ALL_TABS = [
   { name: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { name: 'Attendance', icon: <ClipboardList size={18} /> },
   { name: 'Regular Members', icon: <ClipboardCheck size={18} /> },
+  { name: 'First Timers', icon: <UserPlus size={18} /> },
   { name: 'Events', icon: <Calendar size={18} /> },
   { name: 'Leaders', icon: <Users size={18} /> },
   { name: 'Finance', icon: <HandCoins size={18} /> },
@@ -69,7 +72,8 @@ const TAB_SUBTITLE = {
   Homepage: 'Welcome back — let’s keep the Jam going',
   Dashboard: 'How the youth are showing up',
   Attendance: 'Who came and when',
-  'Regular Members': 'Tick who’s here today — tap a name for details',
+  'Regular Members': 'Tick who’s here today — spot who needs a follow-up',
+  'First Timers': 'Type in today’s first timers',
   Events: 'What’s coming up and what’s passed',
   Leaders: 'Your leaders and the people they’re discipling',
   Finance: 'Giving records',
@@ -1475,6 +1479,15 @@ const financeChartData = useMemo(() => {
     members={members}
     attendance={attendance}
     search={search}
+    onChanged={fetchData}
+  />
+)}
+
+{/* FIRST TIMERS (consolidation team) */}
+{activeTab === 'First Timers' && (
+  <FirstTimers
+    members={members}
+    attendance={attendance}
     onChanged={fetchData}
   />
 )}

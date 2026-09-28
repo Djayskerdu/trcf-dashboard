@@ -104,7 +104,7 @@ const ROLES = {
     read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'history'],
     write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance'],
     ops: ['add', 'update', 'delete'],
-    manageAccounts: true, notify: true, mail: true, checkin: true,
+    manageAccounts: true, notify: true, mail: true, checkin: true, firstTimer: true,
   },
   admin: {
     read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl'],
@@ -117,6 +117,14 @@ const ROLES = {
     write: ['attendance'],
     ops: ['add'],
     checkin: true,
+  },
+  // Consolidation Team: the only role (besides leader) that may type First Timer names.
+  // They see member contact details so they can follow up absentees.
+  consolidation: {
+    read: ['attendance', 'members', 'events', 'leaders', 'ygl'],
+    write: [],
+    ops: [],
+    checkin: true, firstTimer: true,
   },
 }
 
@@ -725,6 +733,14 @@ function setPresent_(user, req) {
   const lock = LockService.getScriptLock()
   lock.waitLock(15000)
   try {
+    // Only names that are on the Members sheet can be ticked by everyone.
+    // Any other name is a First Timer, which only the Consolidation Team (and leaders) may add or remove.
+    const isMember = ss.getSheetByName('Members').getDataRange().getValues().slice(1)
+      .some(r => String(r[1]).replace(/\s+/g, ' ').trim().toLowerCase() === name.toLowerCase())
+    if (!isMember && !ROLES[user.role].firstTimer) {
+      throw new Error('Only the Consolidation Team can add first timers')
+    }
+
     const last = sh.getLastRow()
     const vals = last > 1 ? sh.getRange(2, 1, last - 1, 2).getValues() : []
     const hits = []
@@ -738,7 +754,7 @@ function setPresent_(user, req) {
       if (hits.length) return { success: true, present: true, duplicate: true }
       sh.appendRow([new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])), safeText_(name)])
       sh.getRange(sh.getLastRow(), 1).setNumberFormat('mmmm d, yyyy')
-      log_(user, 'ADD', 'Attendance', 'Check-in: ' + name + ' (' + day + ')')
+      log_(user, 'ADD', 'Attendance', (isMember ? 'Check-in: ' : 'First timer: ') + name + ' (' + day + ')')
       return { success: true, present: true }
     }
 

@@ -9,6 +9,7 @@ const ROLE_HELP = {
   leader: 'Full access, manages accounts',
   admin: 'Manage all data, no account control',
   staff: 'View + add attendance only',
+  consolidation: 'Types first timers + sees follow-up list',
 }
 
 export default function AccountsPanel({ me }) {

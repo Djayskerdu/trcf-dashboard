@@ -1,10 +1,13 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Check, UserPlus, Cake, Users, Phone, Mail, QrCode, CalendarCheck } from 'lucide-react'
+import { Check, Cake, Users, Phone, Mail, QrCode, CalendarCheck, AlertTriangle } from 'lucide-react'
 import Modal from './Modal'
 import { api } from '../lib/api'
 import { ymd } from '../lib/tables'
+
+// A regular who misses this many Youth Jams in a row gets flagged for follow-up.
+const ABSENT_LIMIT = 3
 
 const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
 const clean = (v) => {
@@ -26,9 +29,8 @@ export default function RegularMembers({ members, attendance, onChanged, search 
   const [date, setDate] = useState(() => ymd(new Date()))
   const [override, setOverride] = useState({}) // name -> true/false while a save is in flight
   const [selected, setSelected] = useState(null) // member row
-  const [walkIn, setWalkIn] = useState('')
   const [error, setError] = useState('')
-  const [busyWalkIn, setBusyWalkIn] = useState(false)
+  const [onlyFollowUp, setOnlyFollowUp] = useState(false)
 
   const list = useMemo(
     () =>
@@ -67,16 +69,43 @@ export default function RegularMembers({ members, attendance, onChanged, search 
     return k in override ? override[k] : presentToday.has(k)
   }
 
-  const walkIns = useMemo(() => {
-    const names = new Map()
+  // First timers are typed in by the Consolidation Team (First Timers tab); here we only count them.
+  const firstTimers = useMemo(() => {
+    const names = new Set()
     ;(attendance || []).slice(1).forEach((r) => {
-      if (dayOf(r[0]) === date && !memberNames.has(norm(r[1]))) names.set(norm(r[1]), String(r[1]).trim())
+      if (dayOf(r[0]) === date && norm(r[1]) && !memberNames.has(norm(r[1]))) names.add(norm(r[1]))
     })
-    Object.keys(override).forEach((k) => {
-      if (override[k] && !memberNames.has(k) && !names.has(k)) names.set(k, k)
+    return names.size
+  }, [attendance, date, memberNames])
+
+  // Youth Jam days = days that have at least one attendance row, before the selected date.
+  const serviceDays = useMemo(() => {
+    const days = new Set()
+    ;(attendance || []).slice(1).forEach((r) => {
+      const k = dayOf(r[0])
+      if (k && k < date) days.add(k)
     })
-    return [...names.entries()].filter(([k]) => override[k] !== false).map(([, v]) => v)
-  }, [attendance, date, memberNames, override])
+    return [...days].sort().reverse() // newest first
+  }, [attendance, date])
+
+  // name -> how many of the latest Youth Jams in a row they missed
+  const missed = useMemo(() => {
+    const out = {}
+    list.forEach((m) => {
+      const k = norm(m.name)
+      const came = new Set(history[k] || [])
+      let n = 0
+      for (const d of serviceDays) {
+        if (came.has(d)) break
+        n++
+      }
+      out[k] = n
+    })
+    return out
+  }, [list, history, serviceDays])
+
+  const missedOf = (name) => missed[norm(name)] || 0
+  const needsFollowUp = (m) => !isPresent(m.name) && missedOf(m.name) >= ABSENT_LIMIT
 
   const toggle = async (name) => {
     const k = norm(name)
@@ -96,32 +125,20 @@ export default function RegularMembers({ members, attendance, onChanged, search 
     }
   }
 
-  const addWalkIn = async (e) => {
-    e.preventDefault()
-    const name = walkIn.replace(/\s+/g, ' ').trim()
-    if (!name) return
-    setBusyWalkIn(true)
-    setError('')
-    try {
-      await api('setPresent', { name, date, present: true })
-      setWalkIn('')
-      await onChanged()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setBusyWalkIn(false)
-    }
-  }
-
   const q = norm(search)
-  const match = (m) => !q || norm(m.name).includes(q) || norm(m.leader).includes(q)
+  const match = (m) =>
+    (!q || norm(m.name).includes(q) || norm(m.leader).includes(q)) && (!onlyFollowUp || needsFollowUp(m))
   const byName = (a, b) => a.name.localeCompare(b.name)
   const male = list.filter((m) => m.gender.toLowerCase() === 'male' && match(m)).sort(byName)
   const female = list.filter((m) => m.gender.toLowerCase() === 'female' && match(m)).sort(byName)
   const other = list.filter((m) => !['male', 'female'].includes(m.gender.toLowerCase()) && match(m)).sort(byName)
 
   const presentMembers = list.filter((m) => isPresent(m.name)).length
-  const total = presentMembers + walkIns.length
+  const total = presentMembers + firstTimers
+  const followUps = list
+    .filter(needsFollowUp)
+    .sort((a, b) => missedOf(b.name) - missedOf(a.name) || a.name.localeCompare(b.name))
+  const lastSeenOf = (name) => (history[norm(name)] || []).find((d) => d < date) || ''
 
   const Column = ({ title, items }) => (
     <div className="rm-col">
@@ -130,8 +147,9 @@ export default function RegularMembers({ members, attendance, onChanged, search 
       </h4>
       {items.map((m) => {
         const on = isPresent(m.name)
+        const flagged = needsFollowUp(m)
         return (
-          <div key={m.id || m.name} className={`rm-row ${on ? 'on' : ''}`}>
+          <div key={m.id || m.name} className={`rm-row ${on ? 'on' : ''} ${flagged ? 'alert' : ''}`}>
             <button
               type="button"
               className="rm-check"
@@ -145,10 +163,15 @@ export default function RegularMembers({ members, attendance, onChanged, search 
             <button type="button" className="rm-name" onClick={() => setSelected(m)}>
               {m.name}
             </button>
+            {flagged && (
+              <span className="rm-flag" title={`Missed the last ${missedOf(m.name)} Youth Jams in a row`}>
+                <AlertTriangle size={12} /> {missedOf(m.name)} missed
+              </span>
+            )}
           </div>
         )
       })}
-      {!items.length && <p className="rm-empty">No one here{q ? ' matches your search' : ''}.</p>}
+      {!items.length && <p className="rm-empty">{onlyFollowUp ? 'No one needs follow-up here.' : `No one here${q ? ' matches your search' : ''}.`}</p>}
     </div>
   )
 
@@ -161,7 +184,7 @@ export default function RegularMembers({ members, attendance, onChanged, search 
         <div>
           <h3>Regular Members</h3>
           <p className="attendance-count">
-            Tick a name to mark them present. Tap a name to see their details.
+            Tick a name to mark them present. Names in red have missed 3 or more Youth Jams in a row.
           </p>
         </div>
         <div className="date-input-group">
@@ -176,12 +199,50 @@ export default function RegularMembers({ members, attendance, onChanged, search 
           <h3>{total}</h3>
         </div>
         <div className="event-stat-box green-stat">
-          <span>Regulars / Not on list</span>
-          <h3>{presentMembers} / {walkIns.length}</h3>
+          <span>Regulars / First timers</span>
+          <h3>{presentMembers} / {firstTimers}</h3>
+        </div>
+        <div className={`event-stat-box ${followUps.length ? 'red-stat' : 'green-stat'}`}>
+          <span>Need follow-up · {ABSENT_LIMIT}+ missed in a row</span>
+          <h3>{followUps.length}</h3>
         </div>
       </div>
 
       {error && <div className="form-error" role="alert">{error}</div>}
+
+      <div className="rm-followup">
+        <div className="rm-followup-head">
+          <h4><AlertTriangle size={15} /> Needs follow-up ({followUps.length})</h4>
+          <button
+            type="button"
+            className={`rm-chip ${onlyFollowUp ? 'is-on' : ''}`}
+            aria-pressed={onlyFollowUp}
+            onClick={() => setOnlyFollowUp((v) => !v)}
+          >
+            {onlyFollowUp ? 'Showing only these' : 'Show only these'}
+          </button>
+        </div>
+        {serviceDays.length < ABSENT_LIMIT ? (
+          <p className="rm-empty">
+            Follow-up alerts start once {ABSENT_LIMIT} Youth Jams are recorded before {prettyDay(date)}
+            {' '}({serviceDays.length} so far).
+          </p>
+        ) : followUps.length ? (
+          <div className="rm-followup-list">
+            {followUps.map((m) => (
+              <button type="button" key={m.id || m.name} className="rm-followup-item" onClick={() => setSelected(m)}>
+                <b>{m.name}</b>
+                <span>
+                  {missedOf(m.name)} in a row · {lastSeenOf(m.name) ? `last seen ${prettyDay(lastSeenOf(m.name))}` : 'never seen'}
+                  {m.leader ? ` · LG: ${m.leader}` : ''}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="rm-empty">Everyone has been around recently. 🎉</p>
+        )}
+      </div>
 
       <div className="rm-grid">
         {Column({ title: 'Male', items: male })}
@@ -192,28 +253,6 @@ export default function RegularMembers({ members, attendance, onChanged, search 
           {Column({ title: 'Gender not set', items: other })}
         </div>
       )}
-
-      <div className="rm-walkin">
-        <h4 className="rm-col-title">Not on the list (new / first timers)</h4>
-        <form onSubmit={addWalkIn} className="rm-walkin-form">
-          <input
-            placeholder="Type full name, then Add"
-            value={walkIn}
-            onChange={(e) => setWalkIn(e.target.value)}
-          />
-          <button className="reset-btn" disabled={busyWalkIn || !walkIn.trim()}>
-            <UserPlus size={16} /> {busyWalkIn ? 'Adding…' : 'Add'}
-          </button>
-        </form>
-        {walkIns.map((n) => (
-          <div key={n} className="rm-row on">
-            <button type="button" className="rm-check" role="checkbox" aria-checked="true" onClick={() => toggle(n)}>
-              <Check size={16} strokeWidth={3} />
-            </button>
-            <span className="rm-name static">{n}</span>
-          </div>
-        ))}
-      </div>
 
       {sel && (
         <Modal title={sel.name} onClose={() => setSelected(null)}>
@@ -226,6 +265,16 @@ export default function RegularMembers({ members, attendance, onChanged, search 
               {sel.contact && <div><Phone size={15} /><span>Contact</span><b>{sel.contact}</b></div>}
               {sel.email && <div><Mail size={15} /><span>Email</span><b>{sel.email}</b></div>}
             </div>
+
+            {needsFollowUp(sel) && (
+              <div className="rm-detail-alert">
+                <AlertTriangle size={16} />
+                <span>
+                  Missed the last <b>{missedOf(sel.name)}</b> Youth Jams in a row. Time to reach out
+                  {sel.leader ? <> — LG leader: <b>{sel.leader}</b></> : ''}.
+                </span>
+              </div>
+            )}
 
             <div className="rm-detail-att">
               <h4><CalendarCheck size={15} /> Attendance</h4>
