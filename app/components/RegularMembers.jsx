@@ -145,6 +145,7 @@ export default function RegularMembers({ members, attendance, onChanged, search 
       <h4 className="rm-col-title">
         {title} <span>{items.filter((m) => isPresent(m.name)).length}/{items.length}</span>
       </h4>
+      <div className="rm-list">
       {items.map((m) => {
         const on = isPresent(m.name)
         const flagged = needsFollowUp(m)
@@ -171,6 +172,7 @@ export default function RegularMembers({ members, attendance, onChanged, search 
           </div>
         )
       })}
+      </div>
       {!items.length && <p className="rm-empty">{onlyFollowUp ? 'No one needs follow-up here.' : `No one here${q ? ' matches your search' : ''}.`}</p>}
     </div>
   )
