@@ -1493,8 +1493,6 @@ const financeChartData = useMemo(() => {
 {activeTab === 'First Timers' && (
   <FirstTimers
     me={session.user}
-    members={members}
-    leaders={leaders}
     attendance={attendance}
     consolidation={consolidation}
     refs={refs}
@@ -1506,8 +1504,6 @@ const financeChartData = useMemo(() => {
 {activeTab === 'Consolidation' && (
   <Consolidation
     me={session.user}
-    members={members}
-    leaders={leaders}
     consolidation={consolidation}
     refs={refs}
     attendance={attendance}
