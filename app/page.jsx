@@ -27,16 +27,18 @@ import {
   KeyRound,
   ClipboardCheck,
   UserPlus,
+  HeartHandshake,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
 import ManageData from './components/ManageData'
 import RegularMembers from './components/RegularMembers'
 import FirstTimers from './components/FirstTimers'
+import Consolidation from './components/Consolidation'
 import AccountsPanel from './components/AccountsPanel'
 import ChangePassword from './components/ChangePassword'
 import { api, loadSession, saveSession, clearSession } from './lib/api'
-import { ROLE_TABS } from './lib/access'
+import { ROLE_TABS, ROLE_LABEL } from './lib/access'
 
 import CalendarView from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
@@ -59,6 +61,7 @@ const ALL_TABS = [
   { name: 'Attendance', icon: <ClipboardList size={18} /> },
   { name: 'Regular Members', icon: <ClipboardCheck size={18} /> },
   { name: 'First Timers', icon: <UserPlus size={18} /> },
+  { name: 'Consolidation', icon: <HeartHandshake size={18} /> },
   { name: 'Events', icon: <Calendar size={18} /> },
   { name: 'Leaders', icon: <Users size={18} /> },
   { name: 'Finance', icon: <HandCoins size={18} /> },
@@ -74,6 +77,7 @@ const TAB_SUBTITLE = {
   Attendance: 'Who came and when',
   'Regular Members': 'Tick who’s here today — spot who needs a follow-up',
   'First Timers': 'Type in today’s first timers',
+  Consolidation: 'Assign first timers to a leader and track the follow-up',
   Events: 'What’s coming up and what’s passed',
   Leaders: 'Your leaders and the people they’re discipling',
   Finance: 'Giving records',
@@ -148,6 +152,7 @@ const handleSendFirstTimersBulk = async () => {
   const [attendance, setAttendance] = useState([])
   const [events, setEvents] = useState([])
   const [leaders, setLeaders] = useState([])
+  const [consolidation, setConsolidation] = useState([])
   const [followup, setFollowup] = useState([])
   const [finance, setFinance] = useState([])
   const [members, setMembers] = useState([]) // ← ADD HERE
@@ -586,6 +591,7 @@ useEffect(() => {
       setAttendance(res.attendance || [])
 setEvents(res.events || [])
 setLeaders(res.leaders || [])
+setConsolidation(res.consolidation || [])
 setFollowup(res.followup || [])
 setFinance(res.finance || [])
 setHistory(
@@ -959,7 +965,7 @@ const financeChartData = useMemo(() => {
 
           <div className="sidebar-user-info">
             <strong>{session.user.name}</strong>
-            <span className={`role-badge ${role}`}>{role}</span>
+            <span className={`role-badge ${role}`}>{ROLE_LABEL[role] || role}</span>
           </div>
 
           <button
@@ -1487,6 +1493,19 @@ const financeChartData = useMemo(() => {
 {activeTab === 'First Timers' && (
   <FirstTimers
     members={members}
+    attendance={attendance}
+    onChanged={fetchData}
+  />
+)}
+
+{/* CONSOLIDATION (conso staff enter, conso head follows up) */}
+{activeTab === 'Consolidation' && (
+  <Consolidation
+    me={session.user}
+    members={members}
+    leaders={leaders}
+    consolidation={consolidation}
+    refs={refs}
     attendance={attendance}
     onChanged={fetchData}
   />

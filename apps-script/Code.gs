@@ -96,21 +96,38 @@ const TABLES = {
       { name: 'Program' },
     ],
   },
+  // First timers handed to a leader for follow-up. EnteredBy / UpdatedOn are filled by the server.
+  consolidation: {
+    sheet: 'Consolidation', key: 1, cols: [
+      { name: 'Date', type: 'date', req: true },
+      { name: 'Name', req: true },
+      { name: 'Age', type: 'number' },
+      { name: 'Gender' },
+      { name: 'Who Invited' },
+      { name: 'AssignedLeader', req: true },
+      { name: 'Status' },
+      { name: 'Notes' },
+      { name: 'EnteredBy', auto: true },
+      { name: 'UpdatedOn', auto: true },
+    ],
+  },
 }
+
+const CONSO_STATUSES = ['PENDING', 'CONTACTED', 'DONE']
 
 // What each role may read / write. Keep in sync with app/lib/access.js
 const ROLES = {
   leader: {
-    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'history'],
-    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance'],
+    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'history', 'consolidation'],
+    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'],
     ops: ['add', 'update', 'delete'],
     manageAccounts: true, notify: true, mail: true, checkin: true, firstTimer: true,
   },
   admin: {
-    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl'],
-    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance'],
+    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'consolidation'],
+    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'],
     ops: ['add', 'update', 'delete'],
-    mail: true, checkin: true,
+    mail: true, checkin: true, firstTimer: true,
   },
   staff: {
     read: ['attendance', 'members', 'events', 'leaders', 'ygl'],
@@ -118,15 +135,26 @@ const ROLES = {
     ops: ['add'],
     checkin: true,
   },
-  // Consolidation Team: the only role (besides leader) that may type First Timer names.
-  // They see member contact details so they can follow up absentees.
-  consolidation: {
-    read: ['attendance', 'members', 'events', 'leaders', 'ygl'],
-    write: [],
+  // Conso Head: follows up the leaders who were assigned first timers.
+  // Full control of the Consolidation sheet; read-only everywhere else.
+  conso_head: {
+    read: ['attendance', 'members', 'events', 'leaders', 'ygl', 'consolidation'],
+    write: ['consolidation'],
+    ops: ['add', 'update', 'delete'],
+    checkin: true, firstTimer: true,
+  },
+  // Conso Staff: types the first timers (name, age, gender, who invited) and picks the leader
+  // assigned to follow up. May add, and fix typos on rows they entered - nothing else.
+  conso_staff: {
+    read: ['attendance', 'members', 'events', 'leaders', 'ygl', 'consolidation'],
+    write: ['consolidation'],
     ops: [],
+    tableOps: { consolidation: ['add', 'update'] },
     checkin: true, firstTimer: true,
   },
 }
+// Old accounts created with the single "consolidation" role keep working as Conso Staff.
+ROLES.consolidation = ROLES.conso_staff
 
 /* =========================================
    ENTRY POINTS
@@ -464,7 +492,7 @@ function getData_(user) {
     const a = readAttendance_(ss)
     out.attendance = a.rows; refs.attendance = a.refs
   }
-  ;['members', 'followup', 'events', 'leaders'].forEach(k => {
+  ;['members', 'followup', 'events', 'leaders', 'consolidation'].forEach(k => {
     if (!has(k)) return
     const t = readTable_(ss.getSheetByName(TABLES[k].sheet), TABLES[k], k === 'events')
     if (k === 'members' && user.role === 'staff') {
@@ -576,6 +604,7 @@ function parseRef_(ref) {
 }
 
 function styleSpecialCells_(sh, t, row) {
+  if (t.sheet === 'Consolidation') sh.getRange(row, 10).setNumberFormat('mmm d, yyyy h:mm AM/PM')
   t.cols.forEach((c, i) => {
     if (c.type === 'time') sh.getRange(row, i + 1).setNumberFormat('h:mm AM/PM')
     if (c.type === 'date') sh.getRange(row, i + 1).setNumberFormat('mmmm d, yyyy')
@@ -586,7 +615,8 @@ function writeRow_(user, op, req) {
   const table = String(req.table || '')
   const t = TABLES[table]
   const role = ROLES[user.role]
-  if (!t || role.write.indexOf(table) < 0 || role.ops.indexOf(op) < 0) throw new Error('Not allowed')
+  const ops = (role.tableOps && role.tableOps[table]) || role.ops
+  if (!t || role.write.indexOf(table) < 0 || ops.indexOf(op) < 0) throw new Error('Not allowed')
 
   const ss = SpreadsheetApp.getActiveSpreadsheet()
   const lock = LockService.getScriptLock()
@@ -596,13 +626,17 @@ function writeRow_(user, op, req) {
 
     if (op === 'add') {
       const vals = cleanValues_(t, req.values)
-      sh = ss.getSheetByName(t.sheet)
+      sh = table === 'consolidation' ? ensureConsoSheet_(ss) : ss.getSheetByName(t.sheet)
       if (!sh) throw new Error(t.sheet + ' sheet not found')
       let extra = ''
       if (table === 'members') {
         const id = generateMemberId_(ss)
         vals[0] = id; vals[7] = 'QR-' + id
         extra = id
+      }
+      if (table === 'consolidation') {
+        if (!sh) sh = ensureConsoSheet_(ss)
+        finishConso_(vals, user, null)
       }
       sh.appendRow(vals)
       row = sh.getLastRow()
@@ -625,6 +659,14 @@ function writeRow_(user, op, req) {
     if (op === 'update') {
       const vals = cleanValues_(t, req.values)
       if (table === 'members') { vals[0] = current[0]; vals[7] = current[7] }
+      if (table === 'consolidation') {
+        if (user.role !== 'conso_head' && user.role !== 'leader' && user.role !== 'admin') {
+          // Conso Staff: only their own rows, and never the follow-up status / notes
+          if (String(current[8]).trim().toLowerCase() !== user.username) throw new Error('You can only edit first timers you entered')
+          vals[6] = current[6]; vals[7] = current[7]
+        }
+        finishConso_(vals, user, current)
+      }
       let extra = ''
       sh.getRange(p.row, 1, 1, t.cols.length).setValues([vals])
       styleSpecialCells_(sh, t, p.row)
@@ -639,6 +681,27 @@ function writeRow_(user, op, req) {
   } finally {
     lock.releaseLock()
   }
+}
+
+/** Consolidation sheet is created on first use so no manual setup is needed. */
+function ensureConsoSheet_(ss) {
+  const t = TABLES.consolidation
+  let sh = ss.getSheetByName(t.sheet)
+  if (!sh) {
+    sh = ss.insertSheet(t.sheet)
+    sh.getRange(1, 1, 1, t.cols.length).setValues([t.cols.map(c => c.name)]).setFontWeight('bold')
+    sh.setFrozenRows(1)
+  }
+  return sh
+}
+
+/** Fills the server-owned columns and normalises Status. `current` = existing row on update, null on add. */
+function finishConso_(vals, user, current) {
+  const status = String(vals[6] || 'PENDING').toUpperCase()
+  if (CONSO_STATUSES.indexOf(status) < 0) throw new Error('Status must be PENDING, CONTACTED or DONE')
+  vals[6] = status
+  vals[8] = current ? current[8] : user.username
+  vals[9] = new Date()
 }
 
 function log_(user, action, sheetName, details) {

@@ -3609,3 +3609,56 @@ font-size: 14px;
 }
 .rm-detail-alert svg { flex: 0 0 auto; margin-top: 2px; }
 .role-badge.consolidation { background: rgba(52, 211, 153, .16); color: #a7f3d0; }
+
+/* ---------- Consolidation tab ---------- */
+.role-badge.conso_head { background: rgba(251, 191, 36, .16); color: #fde68a; }
+.role-badge.conso_staff { background: rgba(52, 211, 153, .16); color: #a7f3d0; }
+
+.conso-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin: 22px 0 8px;
+}
+.conso-check {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; opacity: .85; padding-bottom: 12px;
+}
+.conso-submit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+.conso-list { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
+.conso-list h4 { margin: 0 0 4px; font-size: 15px; }
+.conso-filter { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.conso-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.conso-leader {
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, .03);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.conso-leader > header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; padding: 2px 4px 8px;
+}
+.conso-leader h5 { margin: 0; font-size: 15px; }
+.conso-leader-side { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.conso-count { font-size: 12px; opacity: .75; }
+.conso-allgood { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #a7f3d0; }
+
+.conso-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 12px;
+  background: rgba(255, 255, 255, .03);
+}
+.conso-row.late { background: rgba(248, 113, 113, .10); box-shadow: inset 3px 0 0 #f87171; }
+.conso-row.done { opacity: .6; }
+.conso-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.conso-meta { font-size: 12px; opacity: .7; }
+.conso-note { font-size: 12px; opacity: .85; font-style: italic; }
+
+@media (max-width: 640px) {
+  .conso-row { flex-wrap: wrap; }
+}

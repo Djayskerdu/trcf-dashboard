@@ -9,7 +9,8 @@ const ROLE_HELP = {
   leader: 'Full access, manages accounts',
   admin: 'Manage all data, no account control',
   staff: 'View + add attendance only',
-  consolidation: 'Types first timers + sees follow-up list',
+  conso_head: 'Follows up the leaders of first timers',
+  conso_staff: 'Types first timers + assigns a leader',
 }
 
 export default function AccountsPanel({ me }) {
@@ -165,6 +166,7 @@ export default function AccountsPanel({ me }) {
                       {Object.keys(ROLE_HELP).map((r) => (
                         <option key={r} value={r}>{r}</option>
                       ))}
+                      {a.role === 'consolidation' && <option value="consolidation">consolidation (old — same as conso_staff)</option>}
                     </select>
                   </td>
                   <td>

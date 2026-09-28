@@ -45,3 +45,13 @@ app/api/gas/route.js     Server proxy to Apps Script
 - Editing the sheet by hand still works (the `onEdit` first-timer automation is kept).
 - Adding a **First Timer = Yes** attendance record automatically creates the Member ID and Follow Up entry, same as before.
 - If a row was changed/removed in the sheet while someone had the old copy open, saving is refused with "Refresh and try again" instead of overwriting the wrong row.
+
+## Consolidation tab & roles
+
+- **conso_staff** – types first timers (name, age, gender, who invited) and picks the leader assigned to follow up. Can fix typos on rows they entered; cannot change status/notes or delete.
+- **conso_head** – sees every first timer grouped by leader (with leader contact numbers), changes status (PENDING / CONTACTED / DONE), adds notes, reassigns and removes. Pending 3+ days are flagged red.
+- Leader and admin have the same access as Conso Head.
+- The `Consolidation` sheet is created automatically the first time someone saves a row.
+- Old accounts with role `consolidation` keep working as Conso Staff.
+
+After pasting the new `apps-script/Code.gs`: Deploy → Manage deployments → Edit → New version → Deploy.
