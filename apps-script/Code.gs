@@ -31,16 +31,9 @@ const CFG = {
 // Order MUST match the sheet columns.
 const TABLES = {
   attendance: {
-    sheet: 'Attendance', key: 2, cols: [
+    sheet: 'Attendance', key: 1, cols: [
       { name: 'Date', type: 'date', req: true },
-      { name: 'Theme' },
       { name: 'FullName', req: true },
-      { name: 'Age', type: 'number' },
-      { name: 'Gender' },
-      { name: 'FirstTimer' },
-      { name: 'Email' },
-      { name: 'Contact' },
-      { name: 'LGLeader' },
     ],
   },
   members: {
@@ -111,18 +104,19 @@ const ROLES = {
     read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'history'],
     write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance'],
     ops: ['add', 'update', 'delete'],
-    manageAccounts: true, notify: true, mail: true,
+    manageAccounts: true, notify: true, mail: true, checkin: true,
   },
   admin: {
     read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl'],
     write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance'],
     ops: ['add', 'update', 'delete'],
-    mail: true,
+    mail: true, checkin: true,
   },
   staff: {
-    read: ['attendance', 'events', 'leaders', 'ygl'],
+    read: ['attendance', 'members', 'events', 'leaders', 'ygl'],
     write: ['attendance'],
     ops: ['add'],
+    checkin: true,
   },
 }
 
@@ -152,6 +146,7 @@ function doPost(e) {
       case 'update':         return json_(writeRow_(user, 'update', req))
       case 'delete':         return json_(writeRow_(user, 'delete', req))
       case 'scan':           return json_(scan_(user, req))
+      case 'setPresent':     return json_(setPresent_(user, req))
       case 'sendWelcomeQR':  return json_(sendWelcomeQR_(user, req))
       case 'notify':         return json_(notify_(user, req))
       case 'saveDevice':     return json_(saveDevice_(user, req))
@@ -464,6 +459,9 @@ function getData_(user) {
   ;['members', 'followup', 'events', 'leaders'].forEach(k => {
     if (!has(k)) return
     const t = readTable_(ss.getSheetByName(TABLES[k].sheet), TABLES[k], k === 'events')
+    if (k === 'members' && user.role === 'staff') {
+      t.rows.forEach((r, i) => { if (i > 0) { r[4] = ''; r[5] = '' } })   // no contact / email for the attendance team
+    }
     out[k] = t.rows; refs[k] = t.refs
   })
   if (has('finance')) {
@@ -505,17 +503,8 @@ function readTable_(sh, t, timeAsDisplay) {
 }
 
 function readAttendance_(ss) {
-  let rows = [], refs = []
-  const sheets = ss.getSheets().filter(s => s.getName() === 'Attendance' || s.getName().indexOf('Archive_') === 0)
-  sheets.sort((a, b) => (a.getName() === 'Attendance' ? -1 : 0) - (b.getName() === 'Attendance' ? -1 : 0))
-  sheets.forEach(sh => {
-    const t = readTable_(sh, TABLES.attendance, false)
-    if (!t.rows.length) return
-    if (!rows.length) { rows = t.rows; refs = t.refs } else {
-      rows = rows.concat(t.rows.slice(1)); refs = refs.concat(t.refs.slice(1))
-    }
-  })
-  return { rows: rows, refs: refs }
+  // Only the live Attendance sheet. Old backups (Backup_* / Archive_*) use the old 9-column layout and are ignored.
+  return readTable_(ss.getSheetByName('Attendance'), TABLES.attendance, false)
 }
 
 /** "13:00:00" | "1:00 PM" -> "1:00 PM" */
@@ -602,7 +591,6 @@ function writeRow_(user, op, req) {
       sh = ss.getSheetByName(t.sheet)
       if (!sh) throw new Error(t.sheet + ' sheet not found')
       let extra = ''
-      if (table === 'attendance') extra = firstTimerHook_(ss, vals)
       if (table === 'members') {
         const id = generateMemberId_(ss)
         vals[0] = id; vals[7] = 'QR-' + id
@@ -617,7 +605,7 @@ function writeRow_(user, op, req) {
     }
 
     const p = parseRef_(req.ref)
-    const okSheet = p.sheet === t.sheet || (table === 'attendance' && p.sheet.indexOf('Archive_') === 0)
+    const okSheet = p.sheet === t.sheet
     if (!okSheet) throw new Error('Not allowed')
     sh = ss.getSheetByName(p.sheet)
     if (!sh || p.row > sh.getLastRow()) throw new Error('Row no longer exists. Refresh and try again.')
@@ -630,7 +618,6 @@ function writeRow_(user, op, req) {
       const vals = cleanValues_(t, req.values)
       if (table === 'members') { vals[0] = current[0]; vals[7] = current[7] }
       let extra = ''
-      if (table === 'attendance') extra = firstTimerHook_(ss, vals)
       sh.getRange(p.row, 1, 1, t.cols.length).setValues([vals])
       styleSpecialCells_(sh, t, p.row)
       log_(user, 'EDIT', t.sheet, 'Edited ' + t.sheet + ' Row ' + p.row + ': ' + String(vals[t.key]) + (extra ? ' (' + extra + ')' : ''))
@@ -715,6 +702,168 @@ function generateMemberId_(ss) {
 }
 
 /* =========================================
+   REGULAR MEMBERS CHECK-IN
+   Ticking a name adds a "Date | FullName" row to Attendance;
+   unticking removes it again. One row per person per day.
+========================================= */
+
+function setPresent_(user, req) {
+  if (!ROLES[user.role].checkin) throw new Error('Not allowed')
+  const name = String(req.name || '').replace(/\s+/g, ' ').trim()
+  if (!name) throw new Error('Name is required')
+  if (name.length > 120) throw new Error('Name is too long')
+  const m = String(req.date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) throw new Error('Invalid date')
+  const day = m[0]
+  const present = req.present === true
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  const sh = ss.getSheetByName('Attendance')
+  if (!sh) throw new Error('Attendance sheet not found')
+  const tz = Session.getScriptTimeZone()
+
+  const lock = LockService.getScriptLock()
+  lock.waitLock(15000)
+  try {
+    const last = sh.getLastRow()
+    const vals = last > 1 ? sh.getRange(2, 1, last - 1, 2).getValues() : []
+    const hits = []
+    vals.forEach((r, i) => {
+      if (!r[0] || String(r[1]).replace(/\s+/g, ' ').trim().toLowerCase() !== name.toLowerCase()) return
+      const d = new Date(r[0])
+      if (!isNaN(d) && Utilities.formatDate(d, tz, 'yyyy-MM-dd') === day) hits.push(i + 2)
+    })
+
+    if (present) {
+      if (hits.length) return { success: true, present: true, duplicate: true }
+      sh.appendRow([new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])), safeText_(name)])
+      sh.getRange(sh.getLastRow(), 1).setNumberFormat('mmmm d, yyyy')
+      log_(user, 'ADD', 'Attendance', 'Check-in: ' + name + ' (' + day + ')')
+      return { success: true, present: true }
+    }
+
+    hits.sort((a, b) => b - a).forEach(row => sh.deleteRow(row))
+    if (hits.length) log_(user, 'DELETE', 'Attendance', 'Un-checked: ' + name + ' (' + day + ')')
+    return { success: true, present: false }
+  } finally {
+    lock.releaseLock()
+  }
+}
+
+/**
+ * ONE-TIME SETUP for the new attendance system. Run from the Apps Script editor.
+ *   - Attendance sheet header becomes  Date | FullName  (old columns C:I removed)
+ *   - Adds the Regular Members below to the Members sheet (skips names already there)
+ * Safe to run twice.
+ */
+function setupRegularMembers() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  const att = ss.getSheetByName('Attendance')
+  if (att) {
+    if (att.getLastRow() > 1 && String(att.getRange(1, 3).getValue()).toLowerCase() === 'theme') {
+      throw new Error('Attendance still has old-format rows. Keep a backup copy, clear rows 2 and below, then run this again.')
+    }
+    att.getRange(1, 1, 1, 2).setValues([['Date', 'FullName']]).setFontWeight('bold')
+    if (att.getMaxColumns() > 2) att.deleteColumns(3, att.getMaxColumns() - 2)
+    att.setFrozenRows(1)
+  }
+
+  const sh = ss.getSheetByName('Members')
+  const have = {}
+  sh.getDataRange().getValues().slice(1).forEach(r => { have[String(r[1]).replace(/\s+/g, ' ').trim().toLowerCase()] = true })
+
+  let added = 0
+  REGULARS_.forEach(r => {
+    if (have[r[0].toLowerCase()]) return
+    const id = generateMemberId_(ss)
+    sh.appendRow([id, r[0], r[1], r[2], 'N/A', 'N/A', r[3], 'QR-' + id])
+    added++
+  })
+  Logger.log('Attendance set to Date | FullName. Regular members added: ' + added)
+}
+
+const REGULARS_ = [
+  ["Aaleyah De Castro", 14, "Female", "Avril Lee Laparan"],
+  ["Aaron Samuel Quilos", 16, "Male", "Jay Abraham"],
+  ["Adrian Jake Nardo", 14, "Male", "Ethan Josh Patal"],
+  ["Adriane Carl Dela Peña", 11, "Male", "Ethan Josh Patal"],
+  ["Allia Dagatan", 17, "Female", "Carla Esclania"],
+  ["Alvir Daniel Jundit", 21, "Male", "Emerson Patal"],
+  ["Angelou Jay Deligeno", 14, "Male", "Jessie Ralph Dumandan"],
+  ["Annika Zaira Sabanal", 12, "Female", "Carla Esclania"],
+  ["Aris Loric Dumandan", 15, "Male", "Jessie Ralph Dumandan"],
+  ["Arthea Billones", 18, "Female", "Joan Patal"],
+  ["Athena Gail Carbonilla", 11, "Female", "Carla Esclania"],
+  ["Avril Lee Laparan", 19, "Female", "Anna Quilos"],
+  ["Billy Orbita", 13, "Male", "Alvir Daniel Jundit"],
+  ["Carl Yee", 23, "Male", "Emerson Patal"],
+  ["Carla Esclania", 14, "Female", "Joan Patal"],
+  ["Casie Andrea Carcallas", 14, "Female", "Arthea Billones"],
+  ["Christian May Eguna", 21, "Female", "Joan Patal"],
+  ["Christian James Zamora", 14, "Male", "Alvir Daniel Jundit"],
+  ["Crystal Dagumo", 13, "Female", "Erika Aguanta"],
+  ["Dionlee Canoos", 21, "Male", "Carl Yee"],
+  ["Dulce Moriene Booc", 12, "Female", "Erika Aguanta"],
+  ["Edriane Cagadas", 16, "Male", "Jaime Rodemio"],
+  ["Ethan Josh Patal", 17, "Male", "Jay Abraham"],
+  ["Ellen Mae Milar", 12, "Female", "Carla Esclania"],
+  ["Emerson Amahan", 13, "Male", "Jessie Ralph Dumandan"],
+  ["Emmanuel Joseph Patal", 10, "Male", "Alvir Daniel Jundit"],
+  ["Gwendelyn M. Dagook", 14, "Female", "Erika Aguanta"],
+  ["Ian Ferenal", 16, "Male", "Emerson Patal"],
+  ["Ian Guilaran", 17, "Male", "Edriane Cagadas"],
+  ["Iñigo P. Davao", 11, "Male", "Jessie Ralph Dumandan"],
+  ["Irene Ann Nazareno", 14, "Female", "Erika Aguanta"],
+  ["Jacob Rabanes", 11, "Male", "Alvir Daniel Jundit"],
+  ["Jairus Samuel Quiben", 14, "Male", "Alvir Daniel Jundit"],
+  ["Jamella Benavides", 12, "Female", "Carla Esclania"],
+  ["Janna Nicole Lasala", 13, "Female", "Arthea Billones"],
+  ["Jay Francis Abraham", 21, "Male", "Bong Quilos"],
+  ["John Carlo Nazareno", 22, "Male", "Emerson Patal"],
+  ["Jeo Gray Mamalis", 22, "Male", "Franklin Flores"],
+  ["Jezriel James Buhayan", 14, "Male", "Jessie Ralph Dumandan"],
+  ["Jocelyn Milar", 11, "Female", "Carla Esclania"],
+  ["John Paul Bantilan", 15, "Male", "Jessie Ralph Dumandan"],
+  ["John Arnel Dagatan", 10, "Male", "Ethan Josh Patal"],
+  ["John Wayne Ibon", 13, "Male", "Jessie Ralph Dumandan"],
+  ["John Nethan Narvasa", 13, "Male", "Alvir Daniel Jundit"],
+  ["John Rey Nazareno", 16, "Male", "Alvir Daniel Jundit"],
+  ["Jonilyn Marie Paclibar", 12, "Female", "Erika Aguanta"],
+  ["Jubel Mawas", 17, "Male", "Jaime Rodemio"],
+  ["Keffer Bryle Ababat", 9, "Male", "Ethan Josh Patal"],
+  ["Ken Espartero", 17, "Male", "Ethan Josh Patal"],
+  ["Kriel James Dagook", 13, "Male", "Alvir Daniel Jundit"],
+  ["Laurence Cainoy", 15, "Male", "Zyr Asombrado"],
+  ["Lee Adriane Fernandez", 20, "Male", "Jay Abraham"],
+  ["Leydan Remerata", 16, "Male", "Zyr Asombrado"],
+  ["Lhyriane Mouie Paco", 14, "Female", "Avril Lee Laparan"],
+  ["Luis Thirdy Suscano", 14, "Male", "Aaron Quilos"],
+  ["Ma. Samara Luniel Banadera", 13, "Female", "Chan Eguna"],
+  ["Marian Dagatan", 21, "Female", "Carla Esclania"],
+  ["Markhy Vincent Rollo", 15, "Male", "Aaron Quilos"],
+  ["Mary Cris Estaco", 14, "Female", "Carla Esclania"],
+  ["Maxin Colin Domdom", 21, "Female", "Chan Eguna"],
+  ["Miguel Peralta", 17, "Male", "Ethan Josh Patal"],
+  ["Mike Jason Guinang", 13, "Male", "Ethan Josh Patal"],
+  ["Nathan Lloyd Rollo", 11, "Male", "Aaron Quilos"],
+  ["Natnat Narvasa", 13, "Female", "Alvir Daniel Jundit"],
+  ["Niel E. Rollan", 12, "Male", "Ethan Josh Patal"],
+  ["Onuu Quiben", 13, "Male", "Alvir Daniel Jundit"],
+  ["Princess Nicole Alcantara", 12, "Female", "Erika Aguanta"],
+  ["Reneil Tudtud", 15, "Male", "Jubel Mawas"],
+  ["Rey Laurence Gacuma", 16, "Male", "Zyr Asombrado"],
+  ["Ritchell Mawas", 13, "Female", "Juvelyn Zulita"],
+  ["Roseleo B. Guinang", 12, "Male", "Ethan Josh Patal"],
+  ["Rudel Singson", 13, "Male", "Jessie Ralph Dumandan"],
+  ["Ryniel Toleran", 17, "Male", "Joey Mamalis"],
+  ["Samartha Dizon", 19, "Female", "Joan Patal"],
+  ["Shanna Isabel Pandia", 16, "Female", "Carla Esclania"],
+  ["Vincent Remerata", 16, "Male", "Zyr Asombrado"],
+  ["Zaijhon Asombrado", 15, "Male", "John Carlo Nazareno"],
+  ["Zekesha D. Eguna", 12, "Female", "Erika Aguanta"]
+]
+
+/* =========================================
    QR SCAN ATTENDANCE
 ========================================= */
 
@@ -735,13 +884,14 @@ function scan_(user, req) {
     const sh = ss.getSheetByName('Attendance')
     const att = sh.getDataRange().getValues()
     const duplicate = att.slice(1).some(r => {
-      if (!r[0] || String(r[2]).trim().toLowerCase() !== String(m[1]).trim().toLowerCase()) return false
+      if (!r[0] || String(r[1]).trim().toLowerCase() !== String(m[1]).trim().toLowerCase()) return false
       const d = new Date(r[0])
       return !isNaN(d) && Utilities.formatDate(d, tz, 'yyyy-MM-dd') === todayStr
     })
     if (duplicate) return { success: true, duplicate: true }
 
-    sh.appendRow([new Date(), '', m[1], m[2], m[3], 'No', m[5], m[4], m[6]])
+    sh.appendRow([new Date(), m[1]])
+    sh.getRange(sh.getLastRow(), 1).setNumberFormat('mmmm d, yyyy')
     log_(user, 'ADD', 'Attendance', 'QR scan: ' + m[1] + ' (' + m[0] + ')')
     return { success: true, duplicate: false }
   } finally {
@@ -960,20 +1110,6 @@ function onEdit(e) {
         logSheet.appendRow([new Date().toISOString(), Session.getActiveUser().getEmail() || 'Unknown User', action, sheetName, details])
       }
     }
-
-    if (sheetName !== 'Attendance') return
-    if (e.range.getColumn() < 3 || e.range.getColumn() > 8) return
-
-    const d = sheet.getRange(row, 1, 1, 9).getValues()[0]
-    const firstTimer = String(d[5] || '').trim().toLowerCase().replace(/\s/g, '')
-    const email = String(d[6] || '').trim().toLowerCase()
-    const fullName = String(d[2] || '').trim()
-    if (firstTimer !== 'yes' || !fullName || !email || email.indexOf('@') < 0) return
-
-    ensureMemberAndFollowUp_(ss, {
-      fullName: fullName, age: d[3] || '', gender: d[4] || '', email: email,
-      contact: String(d[7] || '').trim(), lgLeader: String(d[8] == null ? '' : d[8]).trim(),
-    })
   } finally {
     lock.releaseLock()
   }

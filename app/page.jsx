@@ -25,10 +25,12 @@ import {
   Database,
   LogOut,
   KeyRound,
+  ClipboardCheck,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
 import ManageData from './components/ManageData'
+import RegularMembers from './components/RegularMembers'
 import AccountsPanel from './components/AccountsPanel'
 import ChangePassword from './components/ChangePassword'
 import { api, loadSession, saveSession, clearSession } from './lib/api'
@@ -53,6 +55,7 @@ const ALL_TABS = [
   { name: 'Homepage', icon: <Home size={18} /> },
   { name: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { name: 'Attendance', icon: <ClipboardList size={18} /> },
+  { name: 'Regular Members', icon: <ClipboardCheck size={18} /> },
   { name: 'Events', icon: <Calendar size={18} /> },
   { name: 'Leaders', icon: <Users size={18} /> },
   { name: 'Finance', icon: <HandCoins size={18} /> },
@@ -65,7 +68,8 @@ const ALL_TABS = [
 const TAB_SUBTITLE = {
   Homepage: 'Welcome back — let’s keep the Jam going',
   Dashboard: 'How the youth are showing up',
-  Attendance: 'Who came, when, and who brought them',
+  Attendance: 'Who came and when',
+  'Regular Members': 'Tick who’s here today — tap a name for details',
   Events: 'What’s coming up and what’s passed',
   Leaders: 'Your leaders and the people they’re discipling',
   Finance: 'Giving records',
@@ -651,6 +655,15 @@ setMembers(res.members || [])
     })
   }
 
+  /* ================= FIRST TIMERS (not on the Members list) ================= */
+
+  const memberNameSet = useMemo(
+    () => new Set(members.slice(1).map((m) => String(m[1] || '').replace(/\s+/g, ' ').trim().toLowerCase())),
+    [members]
+  )
+  const isFirstTimerRow = (row) =>
+    !memberNameSet.has(String(row[1] || '').replace(/\s+/g, ' ').trim().toLowerCase())
+
   /* ================= DASHBOARD FILTER ================= */
 
   const dashboardFilteredAttendance = useMemo(() => {
@@ -734,12 +747,7 @@ setMembers(res.members || [])
 
     }
 
-    const firstTimer =
-      row[5]
-        ?.toString()
-        .toLowerCase()
-
-    if (firstTimer === 'yes') {
+    if (isFirstTimerRow(row)) {
 
       grouped[date].firstTimers += 1
 
@@ -753,7 +761,7 @@ setMembers(res.members || [])
 
   return Object.values(grouped)
 
-}, [dashboardFilteredAttendance])
+}, [dashboardFilteredAttendance, memberNameSet])
 
 const financeChartData = useMemo(() => {
 
@@ -794,7 +802,7 @@ const financeChartData = useMemo(() => {
         if (startDate && rowDate < startDate) return false
         if (endDate && rowDate > endDate) return false
 
-        if (q && !String(row[2] || '').toLowerCase().includes(q)) {
+        if (q && !String(row[1] || '').toLowerCase().includes(q)) {
           return false
         }
 
@@ -1145,12 +1153,7 @@ const financeChartData = useMemo(() => {
               <StatCard
                 title="First Timers"
                 value={
-                  dashboardFilteredAttendance.filter(
-                    (r) =>
-                      r[5]
-                        ?.toString()
-                        .toLowerCase() === 'yes'
-                  ).length
+                  dashboardFilteredAttendance.filter(isFirstTimerRow).length
                 }
                 color="green"
               />
@@ -1270,12 +1273,7 @@ const financeChartData = useMemo(() => {
 
             <h3>
               {
-                filteredAttendance.filter(
-                  (row) =>
-                    row[5]
-                      ?.toString()
-                      .toLowerCase() === 'yes'
-                ).length
+                filteredAttendance.filter(isFirstTimerRow).length
               }
             </h3>
 
@@ -1348,13 +1346,8 @@ const financeChartData = useMemo(() => {
 
           <tr>
             <th>Date</th>
-            <th>Theme</th>
             <th>Full Name</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>First Timer</th>
-            <th>Email</th>
-            <th>LG Leader</th>
+            <th>Type</th>
           </tr>
 
         </thead>
@@ -1374,17 +1367,7 @@ const financeChartData = useMemo(() => {
 
                   <td>{row[1]}</td>
 
-                  <td>{row[2]}</td>
-
-                  <td>{row[3]}</td>
-
-                  <td>{row[4]}</td>
-
-                  <td>{row[5]}</td>
-
-                  <td>{row[6]}</td>
-
-                  <td>{row[8] || row[7]}</td>
+                  <td>{isFirstTimerRow(row) ? 'First timer' : 'Regular'}</td>
 
                 </tr>
 
@@ -1396,7 +1379,7 @@ const financeChartData = useMemo(() => {
             <tr>
 
               <td
-                colSpan="8"
+                colSpan="3"
                 className="empty-state"
               >
                 No attendance records found.
@@ -1484,6 +1467,16 @@ const financeChartData = useMemo(() => {
 
   </div>
 
+)}
+
+{/* REGULAR MEMBERS */}
+{activeTab === 'Regular Members' && (
+  <RegularMembers
+    members={members}
+    attendance={attendance}
+    search={search}
+    onChanged={fetchData}
+  />
 )}
 
 {/* EVENTS */}
@@ -1780,16 +1773,16 @@ onClickDay={(value) => {
       participantList.length
 
     totalFirstTimers =
-      participantList.filter((a) => {
+      participantList.filter(isFirstTimerRow).length
 
-        return (
-          a[5]
-            ?.toString()
-            .trim()
-            .toLowerCase() === 'yes'
-        )
-
-      }).length
+    // attendance is Date | FullName, so pull age / leader from Members
+    participantList = participantList.map((a) => {
+      const key = String(a[1] || '').replace(/\s+/g, ' ').trim().toLowerCase()
+      const m = members.slice(1).find(
+        (x) => String(x[1] || '').replace(/\s+/g, ' ').trim().toLowerCase() === key
+      )
+      return [null, a[1], m?.[2], m?.[6], '-', m ? 'No' : 'Yes', '-']
+    })
   }
 
   const rawTime = foundEvent[3]

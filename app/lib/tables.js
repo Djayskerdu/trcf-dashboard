@@ -8,25 +8,14 @@
 export const TABLES = {
   attendance: {
     label: 'Attendance',
-    key: 2,
-    show: [0, 2, 3, 4, 5, 8],
+    key: 1,
+    show: [0, 1],
     sortByDate: true,
     fields: [
       { name: 'Date', type: 'date', req: true, today: true },
-      { name: 'Theme', suggest: 'auto' },
       { name: 'Full Name', req: true },
-      { name: 'Age', type: 'number' },
-      { name: 'Gender', options: ['Male', 'Female'] },
-      { name: 'First Timer', options: ['No', 'Yes'], default: 'No' },
-      { name: 'Email', type: 'email' },
-      { name: 'Contact' },
-      { name: 'LG Leader', suggest: 'leaders' },
     ],
-    validate: (v) =>
-      v[5] === 'Yes' && !String(v[6]).includes('@')
-        ? 'Email is required for first timers (the QR pass is sent there).'
-        : null,
-    note: 'Marking someone as a First Timer automatically creates their Member ID and a Follow Up entry.',
+    note: 'Tip: for a normal Friday, tick names on the Regular Members page instead.',
   },
 
   members: {
