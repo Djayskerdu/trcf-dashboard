@@ -23,7 +23,7 @@ function getRows(key, data, refs) {
 
 export default function ManageData({ data, refs, role, onChanged, search = '' }) {
   const write = ROLE_WRITE[role] || { tables: [], ops: [] }
-  const tableKeys = write.tables
+  const tableKeys = write.tables.filter((k) => TABLES[k]) // never crash on a table without a form definition
 
   const [tab, setTab] = useState(tableKeys[0])
   const [query, setQuery] = useState('')

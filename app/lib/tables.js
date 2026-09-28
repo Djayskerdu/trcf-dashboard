@@ -101,6 +101,27 @@ export const TABLES = {
       { name: 'Program', suggest: 'auto', default: 'Youth Jam' },
     ],
   },
+
+  // First timers assigned to a leader. Must match TABLES.consolidation in Code.gs.
+  consolidation: {
+    label: 'Consolidation',
+    key: 1,
+    show: [0, 1, 5, 6],
+    sortByDate: true,
+    fields: [
+      { name: 'Date', type: 'date', req: true, today: true },
+      { name: 'Name', req: true },
+      { name: 'Age', type: 'number' },
+      { name: 'Gender', options: ['Male', 'Female'] },
+      { name: 'Who Invited', suggest: 'auto' },
+      { name: 'Assigned Leader', req: true, suggest: 'leaders' },
+      { name: 'Status', options: ['PENDING', 'CONTACTED', 'DONE'], default: 'PENDING' },
+      { name: 'Notes', long: true },
+      { name: 'Entered By', auto: true },
+      { name: 'Updated On', auto: true },
+    ],
+    note: 'Entered By and Updated On are filled in automatically.',
+  },
 }
 
 /* ---------- helpers ---------- */
