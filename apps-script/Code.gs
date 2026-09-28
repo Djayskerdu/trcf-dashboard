@@ -882,12 +882,24 @@ function notify_(user, req) {
   }
 
   const results = UrlFetchApp.fetchAll(requests)
-  const ok = results.filter(r => r.getResponseCode() < 300).length
-  log_(user, 'ADD', 'Users', 'Sent reminder to ' + Object.keys(reached).join(', ') + ' (' + ok + '/' + requests.length + ' devices)')
+  let ok = 0
+  let firstError = ''
+  results.forEach(r => {
+    let body = {}
+    try { body = JSON.parse(r.getContentText() || '{}') } catch (e) { body = {} }
+    // OneSignal can answer 200 without creating a message (e.g. device unsubscribed)
+    const accepted = r.getResponseCode() < 300 && body.id && !(body.errors && Object.keys(body.errors).length)
+    if (accepted) { ok++; return }
+    if (!firstError) {
+      const e = body.errors
+      firstError = Array.isArray(e) ? e.join('; ') : (e ? JSON.stringify(e) : 'HTTP ' + r.getResponseCode())
+    }
+  })
+  log_(user, 'ADD', 'Users', 'Sent reminder to ' + Object.keys(reached).join(', ') + ' (' + ok + '/' + requests.length + ' devices accepted)')
   return {
     success: ok > 0, sent: ok, total: requests.length,
     accounts: Object.keys(reached).length, skipped: noDevice,
-    error: ok ? '' : 'OneSignal rejected the request',
+    error: ok ? '' : 'OneSignal did not deliver: ' + firstError,
   }
 }
 

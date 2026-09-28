@@ -1,13 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import Modal from './Modal'
+import Pager from './Pager'
 import { api } from '../lib/api'
 import { ROLE_WRITE } from '../lib/access'
 import { TABLES, ymd, toFormValue, toCell } from '../lib/tables'
-
-const PAGE = 100
 
 /** Normalise every table to { rows: [[...cells]], refs: [...] } (header removed). */
 function getRows(key, data, refs) {
@@ -28,7 +27,8 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
 
   const [tab, setTab] = useState(tableKeys[0])
   const [query, setQuery] = useState('')
-  const [limit, setLimit] = useState(PAGE)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(15)
   const [form, setForm] = useState(null) // { mode:'add'|'edit', ref, expect, values }
   const [del, setDel] = useState(null) // { ref, expect, label }
   const [busy, setBusy] = useState(false)
@@ -76,6 +76,15 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
     })
     return list
   }, [rows, rowRefs, cfg, query, search])
+
+  // keep the page valid when the list shrinks (search, delete) and reset on top-bar search
+  const pages = Math.max(1, Math.ceil(visible.length / pageSize))
+  const current = Math.min(page, pages)
+  const pageRows = visible.slice((current - 1) * pageSize, current * pageSize)
+
+  useEffect(() => {
+    setPage(1)
+  }, [search, pageSize])
 
   const flash = (msg) => {
     setNotice(msg)
@@ -146,7 +155,7 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
   const switchTab = (k) => {
     setTab(k)
     setQuery('')
-    setLimit(PAGE)
+    setPage(1)
   }
 
   return (
@@ -182,7 +191,7 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
-              setLimit(PAGE)
+              setPage(1)
             }}
           />
         </div>
@@ -200,7 +209,7 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
         {visible.length} record{visible.length === 1 ? '' : 's'}
       </p>
 
-      <div className="table-wrapper">
+      <div className="table-wrapper manage-table">
         <table className="compact">
           <thead>
             <tr>
@@ -211,7 +220,7 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
             </tr>
           </thead>
           <tbody>
-            {visible.slice(0, limit).map((x) => (
+            {pageRows.map((x) => (
               <tr key={x.ref}>
                 {cfg.show.map((i) => (
                   <td key={i} className="cell-clip">
@@ -254,11 +263,13 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
         </table>
       </div>
 
-      {visible.length > limit && (
-        <button className="reset-btn" style={{ marginTop: 14 }} onClick={() => setLimit((l) => l + PAGE)}>
-          Show more ({visible.length - limit} left)
-        </button>
-      )}
+      <Pager
+        total={visible.length}
+        page={current}
+        pageSize={pageSize}
+        onPage={setPage}
+        onPageSize={setPageSize}
+      />
 
       {/* ADD / EDIT */}
       {form && (

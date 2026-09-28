@@ -662,3 +662,19 @@ h1, h2, h3, h4,
 @media print {
   .tab-view { animation: none; }
 }
+
+/* ================= MANAGE DATA: compact rows ================= */
+
+.manage-table td,
+.manage-table th {
+  padding: 9px 14px;
+}
+
+.manage-table td {
+  font-size: 13.5px;
+}
+
+.manage-table .icon-btn {
+  width: 32px;
+  height: 32px;
+}
