@@ -3738,3 +3738,8 @@ font-size: 14px;
 .rm-followup-list { max-height: 240px; overflow-y: auto; }
 .rm-followup-item { background: rgba(255, 255, 255, .03); }
 .event-stat-box.red-stat { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .1); }
+
+/* streak line inside Consolidation rows */
+.conso-streak { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.streak-dots.mini { gap: 4px; }
+.streak-dots.mini .dot { width: 22px; height: 22px; font-size: 10px; }
