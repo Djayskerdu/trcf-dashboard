@@ -30,6 +30,8 @@ import {
   HeartHandshake,
   Flame,
   Receipt,
+  Pin,
+  PinOff,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
@@ -155,6 +157,20 @@ const handleSendFirstTimersBulk = async () => {
 }
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarPinned, setSidebarPinned] = useState(false)
+
+  useEffect(() => {
+    try {
+      setSidebarPinned(localStorage.getItem('sidebarPinned') === '1')
+    } catch {}
+  }, [])
+
+  const togglePin = () => {
+    setSidebarPinned((p) => {
+      try { localStorage.setItem('sidebarPinned', p ? '0' : '1') } catch {}
+      return !p
+    })
+  }
   const [installPrompt, setInstallPrompt] =
   useState(null)
 
@@ -912,7 +928,7 @@ const financeChartData = useMemo(() => {
 
   return (
 
-    <main className="dashboard">
+    <main className={`dashboard ${sidebarPinned ? 'sidebar-pinned' : ''}`}>
 
       {/* MOBILE OVERLAY */}
       {sidebarOpen && (
@@ -956,7 +972,7 @@ const financeChartData = useMemo(() => {
               className="logo"
             />
             <span className="brand-name">
-              <Equalizer /> Youth Jam Database
+              <Equalizer /> <span className="brand-text">Youth Jam Database</span>
             </span>
           </div>
 
@@ -987,23 +1003,36 @@ const financeChartData = useMemo(() => {
 
         <div className="sidebar-user">
 
-          <div className="sidebar-user-info">
-            <strong>{session.user.name}</strong>
-            <span className={`role-badge ${role}`}>{ROLE_LABEL[role] || role}</span>
+          <div className="sidebar-user-row">
+            <div className="sidebar-avatar" aria-hidden="true">
+              {(session.user.name || '?').trim().charAt(0).toUpperCase()}
+            </div>
+            <div className="sidebar-user-info">
+              <strong>{session.user.name}</strong>
+              <span className={`role-badge ${role}`}>{ROLE_LABEL[role] || role}</span>
+            </div>
           </div>
+
+          <button
+            className={`sidebar-link pin-btn ${sidebarPinned ? 'on' : ''}`}
+            onClick={togglePin}
+            title={sidebarPinned ? 'Unpin sidebar' : 'Pin sidebar open'}
+          >
+            {sidebarPinned ? <PinOff size={16} /> : <Pin size={16} />} <span>{sidebarPinned ? 'Unpin sidebar' : 'Pin sidebar'}</span>
+          </button>
 
           <button
             className="sidebar-link"
             onClick={() => setShowPassword(true)}
           >
-            <KeyRound size={16} /> Change password
+            <KeyRound size={16} /> <span>Change password</span>
           </button>
 
           <button
             className="sidebar-link"
             onClick={onLogout}
           >
-            <LogOut size={16} /> Log out
+            <LogOut size={16} /> <span>Log out</span>
           </button>
 
         </div>
@@ -3587,6 +3616,7 @@ function MenuItem({
         active ? 'active' : ''
       }`}
       aria-current={active ? 'page' : undefined}
+      title={text}
       onClick={onClick}
     >
 

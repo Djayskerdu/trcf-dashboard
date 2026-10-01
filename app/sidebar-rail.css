@@ -1,0 +1,139 @@
+/* ==========================================================================
+   HOVER SIDEBAR  (desktop only)
+   Rests as a 76px icon rail, slides out to 260px OVER the page on hover or
+   keyboard focus. Phones/tablets (<= 1000px) keep the existing hamburger drawer.
+   Import this LAST in layout.jsx, after mobile.css.
+   ========================================================================== */
+
+@media (min-width: 1001px) {
+
+  :root {
+    --rail-w: 76px;
+    --rail-open-w: 260px;
+  }
+
+  /* the page always reserves only the rail's width, so nothing jumps */
+  .dashboard {
+    padding-left: var(--rail-w);
+    transition: padding-left 0.25s var(--ease, ease);
+  }
+
+  .dashboard > .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 60;
+    width: var(--rail-w);
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* collapse is instant-ish; the open delay is set on :hover below */
+    transition: width 0.25s var(--ease, ease), box-shadow 0.25s var(--ease, ease);
+  }
+
+  /* open on hover (120ms hover-intent) or when tabbing in with the keyboard.
+     :has(:focus-visible) instead of :focus-within so a mouse click doesn't pin it open */
+  .dashboard > .sidebar:hover,
+  .dashboard > .sidebar:has(:focus-visible) {
+    width: var(--rail-open-w);
+    box-shadow: 18px 0 50px -12px rgba(0, 0, 0, 0.65);
+  }
+  .dashboard > .sidebar:hover {
+    transition-delay: 0.12s, 0.12s;
+  }
+
+  /* ---------- labels: hidden in the rail, fade in when open ---------- */
+  .sidebar .menu-item span,
+  .sidebar .sidebar-link span,
+  .sidebar .brand-text,
+  .sidebar .sidebar-user-info {
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .sidebar:hover .menu-item span,
+  .sidebar:hover .sidebar-link span,
+  .sidebar:hover .brand-text,
+  .sidebar:hover .sidebar-user-info,
+  .sidebar:has(:focus-visible) .menu-item span,
+  .sidebar:has(:focus-visible) .sidebar-link span,
+  .sidebar:has(:focus-visible) .brand-text,
+  .sidebar:has(:focus-visible) .sidebar-user-info {
+    opacity: 1;
+    transition-delay: 0.14s;
+  }
+
+  .sidebar .menu-item svg,
+  .sidebar .sidebar-link svg {
+    flex-shrink: 0;
+  }
+  .sidebar .sidebar-link { padding-inline: 16px; }
+
+  /* ---------- brand: logo hidden in the rail, equalizer stays ---------- */
+  .sidebar .brand { overflow: hidden; }
+  .sidebar .brand .logo {
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.25s var(--ease, ease), opacity 0.2s ease;
+  }
+  .sidebar:hover .brand .logo,
+  .sidebar:has(:focus-visible) .brand .logo {
+    max-height: 90px;
+    opacity: 1;
+  }
+  .sidebar .brand-name { justify-content: center; }
+
+  /* ---------- user block: initial circle in the rail ---------- */
+  .sidebar-avatar {
+    width: 40px;
+    height: 40px;
+    margin-left: 4px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--blue, #2f7dff), var(--violet, #8c52ff));
+  }
+  .sidebar .sidebar-user-info {
+    /* sits beside the avatar once open */
+    padding: 0;
+    flex: 1;
+    min-width: 0;
+  }
+  .sidebar-user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* ---------- pin button ---------- */
+  .sidebar-link.pin-btn.on { color: #fff; background: rgba(47, 125, 255, 0.18); }
+
+  /* ---------- pinned: stays open and pushes the page ---------- */
+  .dashboard.sidebar-pinned { padding-left: var(--rail-open-w); }
+  .dashboard.sidebar-pinned > .sidebar {
+    width: var(--rail-open-w);
+    box-shadow: none;
+  }
+  .dashboard.sidebar-pinned .sidebar .menu-item span,
+  .dashboard.sidebar-pinned .sidebar .sidebar-link span,
+  .dashboard.sidebar-pinned .sidebar .brand-text,
+  .dashboard.sidebar-pinned .sidebar .sidebar-user-info { opacity: 1; }
+  .dashboard.sidebar-pinned .sidebar .brand .logo { max-height: 90px; opacity: 1; }
+}
+
+/* on phones the new wrapper elements must not change the drawer */
+@media (max-width: 1000px) {
+  .sidebar-avatar { display: none; }
+  .sidebar-user-row { display: block; }
+  .sidebar .pin-btn { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard, .dashboard > .sidebar, .sidebar * { transition: none !important; }
+}

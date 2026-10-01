@@ -1,6 +1,7 @@
 import './globals.css'
 import './rebrand.css'
 import './mobile.css'
+import './sidebar-rail.css'
 import Script from 'next/script'
 import OneSignalClient from './OneSignalClient'
 
