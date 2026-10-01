@@ -185,13 +185,41 @@
 .evm-empty strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 16px; }
 .evm-empty p { margin: 0; font-size: 14px; }
 
-/* ---------- phones: table rows become cards ---------- */
+/* ---------- phones: bottom sheet, table rows become cards ---------- */
 @media (max-width: 700px) {
-  .evm-overlay { padding: 10px; align-items: end; }
-  .evm { max-height: 92vh; }
-  .evm-head { padding: 20px 18px; gap: 14px; align-items: flex-start; padding-right: 58px; }
-  .evm-date { width: 64px; }
-  .evm-date strong { font-size: 28px; }
+  .evm-overlay { padding: 0; align-items: flex-end; }
+  .evm {
+    width: 100%;
+    max-height: 90dvh;
+    border-radius: 24px 24px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* grab handle */
+  .evm::before {
+    content: '';
+    flex-shrink: 0;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .evm-head { gap: 14px; align-items: flex-start; padding: 16px 62px 18px 18px; }
+  .evm-date { width: 62px; padding: 8px 0 10px; border-radius: 14px; }
+  .evm-date strong { font-size: 26px; }
+  .evm-date small { font-size: 11px; }
+  .evm-title h2 { margin: 8px 0 10px; font-size: 20px; line-height: 1.2; }
+
+  /* meta: one tidy column instead of a ragged wrap */
+  .evm-meta { flex-direction: column; flex-wrap: nowrap; gap: 8px; font-size: 14px; }
+  .evm-meta li { align-items: flex-start; min-width: 0; overflow-wrap: anywhere; }
+  .evm-meta svg { margin-top: 2px; }
+
+  /* mobile.css gives every button min-height: 44px, which stretched this into a tall rectangle */
+  .evm-close { top: 14px; right: 14px; width: 40px; height: 40px; min-width: 40px; min-height: 0; padding: 0; }
+
   .evm-stats { flex-wrap: wrap; gap: 18px; padding: 14px 18px; }
   .evm-ratio { margin-left: 0; width: 100%; }
   .evm-body { padding: 16px 18px 20px; }

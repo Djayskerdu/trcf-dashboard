@@ -35,6 +35,8 @@ import {
   Clock,
   MapPin,
   X,
+  Phone,
+  ChevronRight,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
@@ -2185,29 +2187,37 @@ setSelectedCalendarEvent({
 {/* LEADERS */}
 {activeTab === 'Leaders' && (
 
-  <div className="glass panel">
+  <div className="glass panel leaders-panel">
 
-    <h3>Leaders</h3>
+    <div className="leaders-head">
+      <h3>All leaders</h3>
+      <span className="leaders-count">{sortedLeaders.length} leaders</span>
+    </div>
 
     <div className="leaders-grid">
 
       {sortedLeaders.map((l, i) => {
 
         const members =
-  l[3]
-    ?.split(/\r?\n|,/)
-    .map((member) =>
-      member
-        .replace(/"/g, '')
-        .trim()
-    )
-    .filter(Boolean) || []
+          l[3]
+            ?.split(/\r?\n|,/)
+            .map((member) =>
+              member
+                .replace(/"/g, '')
+                .trim()
+            )
+            .filter(Boolean) || []
+
+        const phone = String(l[4] || '').trim()
+        const count = Number(l[2] || 0)
 
         return (
 
           <div
             className="leader-card clickable"
             key={i}
+            role="button"
+            tabIndex={0}
             onClick={() =>
               setSelectedLeader({
                 name: l[1],
@@ -2216,25 +2226,43 @@ setSelectedCalendarEvent({
                 level: 'main',
               })
             }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setSelectedLeader({
+                  name: l[1],
+                  members,
+                  leaderData: l,
+                  level: 'main',
+                })
+              }
+            }}
           >
 
-            <div className="leader-avatar">
-              {l[1]?.charAt(0)}
+            <div className="leader-top">
+              <div className="leader-avatar">
+                {l[1]?.charAt(0)}
+              </div>
+
+              <div className="leader-id">
+                <h2>{l[1]}</h2>
+                <p>{l[0]}</p>
+              </div>
+
+              <ChevronRight size={18} className="leader-chevron" />
             </div>
-
-            <h2>{l[1]}</h2>
-
-            <p>{l[0]}</p>
 
             <div className="leader-meta">
 
-              <span>
-                👥 {Number(l[2] || 0)} Members
+              <span className="leader-chip">
+                <Users size={14} /> {count} {count === 1 ? 'Member' : 'Members'}
               </span>
 
-              <span>
-                📞 {l[4]}
-              </span>
+              {phone && (
+                <span className="leader-chip leader-chip-phone">
+                  <Phone size={14} /> {phone}
+                </span>
+              )}
 
             </div>
 
@@ -2260,6 +2288,8 @@ setSelectedCalendarEvent({
 
     <div
       className="leader-popup"
+      role="dialog"
+      aria-modal="true"
       onClick={(e) =>
         e.stopPropagation()
       }
@@ -2267,17 +2297,24 @@ setSelectedCalendarEvent({
 
       <div className="popup-header">
 
-        <h2>
-          {selectedLeader.name}'s Members
-        </h2>
+        <div className="popup-title">
+          <h2>
+            {selectedLeader.name}'s Members
+          </h2>
+          <small>
+            {selectedLeader.members.length}{' '}
+            {selectedLeader.members.length === 1 ? 'member' : 'members'}
+          </small>
+        </div>
 
         <button
           className="popup-close"
+          aria-label="Close members"
           onClick={() =>
             setSelectedLeader(null)
           }
         >
-          ✕
+          <X size={18} />
         </button>
 
       </div>
