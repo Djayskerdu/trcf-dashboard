@@ -1520,6 +1520,7 @@ const financeChartData = useMemo(() => {
     members={members}
     leaders={leaders}
     consolidation={consolidation}
+    streaks={streaks}
     refs={refs}
     attendance={attendance}
     onChanged={fetchData}
