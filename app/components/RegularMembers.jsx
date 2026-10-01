@@ -27,6 +27,7 @@ const prettyDay = (key) => {
 
 export default function RegularMembers({ members, attendance, onChanged, search = '' }) {
   const [date, setDate] = useState(() => ymd(new Date()))
+  const [showFollowUps, setShowFollowUps] = useState(false) // collapsed by default so the page stays calm
   const [override, setOverride] = useState({}) // name -> true/false while a save is in flight
   const [selected, setSelected] = useState(null) // member row
   const [error, setError] = useState('')
@@ -165,9 +166,7 @@ export default function RegularMembers({ members, attendance, onChanged, search 
               {m.name}
             </button>
             {flagged && (
-              <span className="rm-flag" title={`Missed the last ${missedOf(m.name)} Youth Jams in a row`}>
-                <AlertTriangle size={12} /> {missedOf(m.name)} missed
-              </span>
+              <span className="rm-dot" title={`Missed the last ${missedOf(m.name)} Youth Jams in a row`} aria-label={`Missed ${missedOf(m.name)} in a row`} />
             )}
           </div>
         )
@@ -186,7 +185,7 @@ export default function RegularMembers({ members, attendance, onChanged, search 
         <div>
           <h3>Regular Members</h3>
           <p className="attendance-count">
-            Tick a name to mark them present. Names in red have missed 3 or more Youth Jams in a row.
+            Tick a name to mark them present. A small amber dot means 3 or more Youth Jams missed in a row.
           </p>
         </div>
         <div className="date-input-group">
@@ -204,7 +203,7 @@ export default function RegularMembers({ members, attendance, onChanged, search 
           <span>Regulars / First timers</span>
           <h3>{presentMembers} / {firstTimers}</h3>
         </div>
-        <div className={`event-stat-box ${followUps.length ? 'red-stat' : 'green-stat'}`}>
+        <div className="event-stat-box">
           <span>Need follow-up · {ABSENT_LIMIT}+ missed in a row</span>
           <h3>{followUps.length}</h3>
         </div>
@@ -221,10 +220,13 @@ export default function RegularMembers({ members, attendance, onChanged, search 
             aria-pressed={onlyFollowUp}
             onClick={() => setOnlyFollowUp((v) => !v)}
           >
-            {onlyFollowUp ? 'Showing only these' : 'Show only these'}
+            {onlyFollowUp ? 'Showing only these' : 'Filter list'}
+          </button>
+          <button type="button" className="rm-chip" aria-expanded={showFollowUps} onClick={() => setShowFollowUps((v) => !v)}>
+            {showFollowUps ? 'Hide' : 'View'}
           </button>
         </div>
-        {serviceDays.length < ABSENT_LIMIT ? (
+        {!showFollowUps ? null : serviceDays.length < ABSENT_LIMIT ? (
           <p className="rm-empty">
             Follow-up alerts start once {ABSENT_LIMIT} Youth Jams are recorded before {prettyDay(date)}
             {' '}({serviceDays.length} so far).
