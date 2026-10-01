@@ -1,0 +1,210 @@
+/* ==========================================================================
+   EVENT DETAILS POPUP  (.evm-*)  — import after sidebar-rail.css
+   ========================================================================== */
+
+.evm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(3, 7, 22, 0.72);
+  backdrop-filter: blur(8px);
+  animation: fadeBackdrop 0.2s ease;
+}
+
+/* the page's tab animation traps this overlay under the sidebar; drop the sidebar below it */
+.dashboard:has(.evm-overlay) > .sidebar { z-index: 0; }
+
+.evm {
+  width: min(1040px, 100%);
+  max-height: min(86vh, 780px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0f1842, #0a1233);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.8);
+  animation: modalIn 0.28s var(--ease);
+}
+.evm-compact { width: min(620px, 100%); }
+
+/* ---------- header ---------- */
+.evm-head {
+  position: relative;
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  padding: 26px 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* the one memorable piece: a ticket-stub date block */
+.evm-date {
+  flex-shrink: 0;
+  width: 84px;
+  padding: 10px 0 12px;
+  text-align: center;
+  border-radius: var(--r-md);
+  background: linear-gradient(160deg, var(--blue-deep), var(--violet));
+  box-shadow: 0 14px 30px -14px rgba(79, 70, 229, 0.8);
+}
+.evm-date strong {
+  display: block;
+  font: 800 38px/1.05 var(--font-display);
+  letter-spacing: -0.03em;
+}
+.evm-date small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.evm-title { min-width: 0; flex: 1; }
+.evm-title h2 {
+  margin: 8px 0 12px;
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.evm-status {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: #c9d4ff;
+}
+.evm-status.blue { background: rgba(47, 125, 255, 0.2); color: #9cc0ff; }
+.evm-status.mint { background: rgba(52, 211, 153, 0.16); color: var(--mint); }
+.evm-status.rose { background: rgba(255, 107, 129, 0.16); color: var(--rose); }
+
+.evm-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 14px;
+}
+.evm-meta li { display: flex; align-items: center; gap: 7px; }
+.evm-meta svg { color: var(--blue); flex-shrink: 0; }
+
+.evm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.evm-close:hover { background: rgba(255, 107, 129, 0.18); border-color: rgba(255, 107, 129, 0.5); }
+
+/* ---------- stats ---------- */
+.evm-stats {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--line);
+}
+.evm-stat span { display: block; font-size: 13px; color: var(--muted); }
+.evm-stat strong {
+  font: 700 28px/1.2 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+.evm-ratio { margin-left: auto; width: min(260px, 100%); }
+.evm-ratio span { display: block; margin-top: 6px; font-size: 13px; color: var(--muted); }
+.evm-ratio-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.evm-ratio-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mint), #22d3ee);
+  transition: width 0.5s var(--ease);
+}
+
+/* ---------- participants ---------- */
+.evm-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 20px 28px 26px; }
+.evm-body h3 { margin: 0 0 12px; font-size: 18px; }
+
+.evm-table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: var(--r-md); }
+.evm-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; }
+.evm-table th {
+  position: sticky;
+  top: 0;
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #121c4a;
+  white-space: nowrap;
+}
+.evm-table td { padding: 12px 14px; border-top: 1px solid var(--line); }
+.evm-table tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
+.evm-name { font-weight: 600; }
+
+.evm-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.07);
+  color: #c9d4ff;
+}
+.evm-pill.yes { background: rgba(52, 211, 153, 0.16); color: var(--mint); }
+
+.evm-empty {
+  padding: 36px 16px;
+  text-align: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  color: var(--muted);
+}
+.evm-empty strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 16px; }
+.evm-empty p { margin: 0; font-size: 14px; }
+
+/* ---------- phones: table rows become cards ---------- */
+@media (max-width: 700px) {
+  .evm-overlay { padding: 10px; align-items: end; }
+  .evm { max-height: 92vh; }
+  .evm-head { padding: 20px 18px; gap: 14px; align-items: flex-start; padding-right: 58px; }
+  .evm-date { width: 64px; }
+  .evm-date strong { font-size: 28px; }
+  .evm-stats { flex-wrap: wrap; gap: 18px; padding: 14px 18px; }
+  .evm-ratio { margin-left: 0; width: 100%; }
+  .evm-body { padding: 16px 18px 20px; }
+  .evm-table { min-width: 0; }
+  .evm-table thead { display: none; }
+  .evm-table, .evm-table tbody, .evm-table tr, .evm-table td { display: block; width: 100%; }
+  .evm-table tr { padding: 10px 14px; border-top: 1px solid var(--line); }
+  .evm-table tr:first-child { border-top: 0; }
+  .evm-table td { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border: 0; }
+  .evm-table td::before { content: attr(data-label); color: var(--muted); font-size: 13px; }
+  .evm-table td.evm-name { font-size: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evm, .evm-overlay, .evm-ratio-bar i { animation: none !important; transition: none !important; }
+}

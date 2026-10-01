@@ -32,6 +32,9 @@ import {
   Receipt,
   Pin,
   PinOff,
+  Clock,
+  MapPin,
+  X,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
@@ -348,6 +351,18 @@ const [selectedCalendarEvent, setSelectedCalendarEvent] =
 
 const isDetailsOnly =
   selectedCalendarEvent?.eventType === "DETAILS_ONLY"
+
+useEffect(() => {
+  if (!selectedCalendarEvent) return
+  const onKey = (e) => {
+    if (e.key === 'Escape') {
+      setSelectedCalendarEvent(null)
+      setSelectedEventParticipants(null)
+    }
+  }
+  window.addEventListener('keydown', onKey)
+  return () => window.removeEventListener('keydown', onKey)
+}, [selectedCalendarEvent])
 
 const today = new Date()
 
@@ -2055,109 +2070,117 @@ setSelectedCalendarEvent({
 )}
 
 
-{selectedCalendarEvent && ( 
-  <div
-    className="leader-popup-overlay"
-    onClick={() => {
-      setSelectedCalendarEvent(null)
-      setSelectedEventParticipants(null)
-    }}
-  >
-    <div
-      className={`event-popup-layout ${
-        isDetailsOnly ? "single-mode" : ""
-      }`}
-      onClick={(e) => e.stopPropagation()}
-    >
+{selectedCalendarEvent && (() => {
+  const ev = selectedCalendarEvent
+  const list = selectedEventParticipants?.participants || []
+  const d = new Date(ev.date)
+  const hasDate = !isNaN(d)
+  const st = String(ev.status || '').toLowerCase()
+  const tone = /cancel/.test(st) ? 'rose'
+    : /done|complete|past|finish/.test(st) ? 'mint'
+    : /upcoming|open|soon|ongoing/.test(st) ? 'blue' : 'plain'
+  const total = Number(ev.participants) || 0
+  const firstTimers = Number(ev.firstTimers) || 0
+  const pct = total > 0 ? Math.min(100, Math.round((firstTimers / total) * 100)) : 0
+  const close = () => {
+    setSelectedCalendarEvent(null)
+    setSelectedEventParticipants(null)
+  }
 
-      {/* LEFT SIDE */}
-      <div className="event-popup-left">
-        <h2>{selectedCalendarEvent.title}</h2>
+  return (
+    <div className="evm-overlay" onClick={close}>
+      <div
+        className={`evm ${isDetailsOnly ? 'evm-compact' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ev.title}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="evm-head">
+          {hasDate && (
+            <div className="evm-date" aria-hidden="true">
+              <small>{d.toLocaleDateString('en-US', { month: 'short' })}</small>
+              <strong>{d.getDate()}</strong>
+              <small>{d.getFullYear()}</small>
+            </div>
+          )}
 
-        <div className="event-info-list">
-          <div className="event-info-card">
-            <span>📅 Date</span>
-            <h4>{displayDate(selectedCalendarEvent.date)}</h4>
+          <div className="evm-title">
+            <span className={`evm-status ${tone}`}>{ev.status || 'Scheduled'}</span>
+            <h2>{ev.title}</h2>
+            <ul className="evm-meta">
+              <li><Calendar size={15} /> {displayDate(ev.date)}</li>
+              <li><Clock size={15} /> {ev.time || '-'}</li>
+              <li><MapPin size={15} /> {ev.location || '-'}</li>
+            </ul>
           </div>
 
-          <div className="event-info-card">
-            <span>🕒 Time</span>
-            <h4>{selectedCalendarEvent.time}</h4>
-          </div>
-
-          <div className="event-info-card">
-            <span>📍 Location</span>
-            <h4>{selectedCalendarEvent.location}</h4>
-          </div>
-
-          <div className="event-info-card">
-            <span>📌 Status</span>
-            <h4>{selectedCalendarEvent.status}</h4>
-          </div>
-        </div>
-      </div>
-
-      {/* MIDDLE (ONLY IF NOT DETAILS_ONLY) */}
-      {!isDetailsOnly && (
-        <div className="event-popup-middle">
-
-          <div className="event-participant-scroll">
-            <h1>LIST OF PARTICIPANTS</h1>
-            {selectedEventParticipants?.participants?.length > 0 ? (
-              selectedEventParticipants.participants.map((p, i) => (
-                <div className="popup-member-card" key={i}>
-                  <div className="popup-member-top">
-                    <span>{i + 1}.</span>
-                    <h4>{p[0]}</h4>
-                  </div>
-
-                  <div className="followup-body">
-                    <p>🎂 Age: {p[1]}</p>
-                    <p>🙋 Invited By: {p[2]}</p>
-                    <p>🏫 School: {p[3]}</p>
-                    <p>✨ First Timer: {p[4]}</p>
-                    <p>📜 Reminder Agreement: {p[5]}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p style={{ opacity: 0.6 }}>No participant data for this event.</p>
-            )}
-          </div>
-
-        </div>
-      )}
-
-      {/* RIGHT SIDE (ONLY IF NOT DETAILS_ONLY) */}
-      {!isDetailsOnly && (
-        <div className="event-popup-right">
-
-          <button
-            className="event-close-btn"
-            onClick={() => {
-              setSelectedCalendarEvent(null)
-              setSelectedEventParticipants(null)
-            }}
-          >
-            ✕
+          <button className="evm-close" onClick={close} aria-label="Close event details">
+            <X size={18} />
           </button>
+        </header>
 
-          <div className="event-stat-box blue-stat">
-            <span>Total Participants</span>
-            <h3>{selectedCalendarEvent.participants}</h3>
-          </div>
+        {!isDetailsOnly && (
+          <>
+            <section className="evm-stats">
+              <div className="evm-stat">
+                <span>Participants</span>
+                <strong>{total}</strong>
+              </div>
+              <div className="evm-stat">
+                <span>First timers</span>
+                <strong>{firstTimers}</strong>
+              </div>
+              <div className="evm-ratio" aria-label={`${pct}% of participants are first timers`}>
+                <div className="evm-ratio-bar"><i style={{ width: `${pct}%` }} /></div>
+                <span>{pct}% first timers</span>
+              </div>
+            </section>
 
-          <div className="event-stat-box green-stat">
-            <span>Total First Timers</span>
-            <h3>{selectedCalendarEvent.firstTimers}</h3>
-          </div>
-
-        </div>
-      )}
-
+            <section className="evm-body">
+              <h3>Participants</h3>
+              {list.length > 0 ? (
+                <div className="evm-table-wrap">
+                  <table className="evm-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Invited by</th>
+                        <th>School</th>
+                        <th>First timer</th>
+                        <th>Agreement</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {list.map((p, i) => (
+                        <tr key={i}>
+                          <td data-label="Name" className="evm-name">{p[0]}</td>
+                          <td data-label="Age">{p[1]}</td>
+                          <td data-label="Invited by">{p[2]}</td>
+                          <td data-label="School">{p[3]}</td>
+                          <td data-label="First timer">
+                            <span className={`evm-pill ${/^y/i.test(String(p[4])) ? 'yes' : ''}`}>{p[4]}</span>
+                          </td>
+                          <td data-label="Agreement">{p[5]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="evm-empty">
+                  <strong>No participants yet</strong>
+                  <p>People who register or check in for this event will show up here.</p>
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </div>
-  </div>
-)}
+  )
+})()}
 
 {/* LEADERS */}
 {activeTab === 'Leaders' && (
