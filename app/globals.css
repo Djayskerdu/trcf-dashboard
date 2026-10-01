@@ -3708,3 +3708,19 @@ font-size: 14px;
 @media (max-width: 1100px) {
   .rm-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- First-timer streak cards ---------- */
+.streak-filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.streak-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.streak-card { border: 1px solid rgba(128,128,128,.25); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.streak-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.streak-sub { display: block; font-size: 12px; opacity: .7; margin-top: 2px; }
+.streak-badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.streak-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 999px; background: rgba(128,128,128,.18); }
+.streak-badge.ok { background: rgba(34,197,94,.2); }
+.streak-badge.gold { background: rgba(250,176,5,.25); }
+.streak-dots { display: flex; gap: 6px; }
+.streak-dots .dot { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; border: 1px dashed rgba(128,128,128,.5); opacity: .7; }
+.streak-dots .dot.on { background: linear-gradient(135deg, #ff9f1c, #ff5d3b); color: #fff; border: none; opacity: 1; }
+.streak-meta { font-size: 13px; margin: 0; opacity: .85; }
+.streak-actions { display: flex; gap: 8px; flex-wrap: wrap; }
