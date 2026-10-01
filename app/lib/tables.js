@@ -3,7 +3,11 @@
 //   type:    'date' | 'number' | 'time' | 'email' (default text)
 //   options: fixed dropdown
 //   suggest: 'auto' = suggestions from values already in that column, 'leaders' = leader names + existing values
+//   defaults: extra suggestions that are always offered (merged with values already in the column)
 //   long:    textarea
+
+export const EXPENSE_CATEGORIES = ['Materials', 'Prizes', 'Food & Drinks', 'Supplies', 'Equipment', 'Printing', 'Decorations', 'Transportation', 'Other']
+export const PAYMENT_METHODS = ['Cash', 'GCash', 'Bank Transfer', 'Other']
 
 export const TABLES = {
   attendance: {
@@ -99,6 +103,23 @@ export const TABLES = {
       { name: 'Giving', req: true, suggest: 'auto', default: 'Tithes and Offering' },
       { name: 'Amount', type: 'number', req: true },
       { name: 'Program', suggest: 'auto', default: 'Youth Jam' },
+    ],
+  },
+
+  // Money spent out of Tithes & Offering. Must match TABLES.expenses in Code.gs.
+  expenses: {
+    label: 'Expenses',
+    key: 1,
+    show: [0, 1, 2, 3, 4],
+    sortByDate: true,
+    fields: [
+      { name: 'Date', type: 'date', req: true, today: true },
+      { name: 'Expense / Purpose', req: true },
+      { name: 'Category', suggest: 'auto', defaults: EXPENSE_CATEGORIES },
+      { name: 'Amount', type: 'number', req: true },
+      { name: 'Purchased By', suggest: 'leaders' },
+      { name: 'Payment Method', options: PAYMENT_METHODS, default: 'Cash' },
+      { name: 'Notes', long: true },
     ],
   },
 

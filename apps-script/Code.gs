@@ -96,6 +96,18 @@ const TABLES = {
       { name: 'Program' },
     ],
   },
+  // Money spent out of Tithes & Offering (materials, prizes, food...). Sheet is created on first use.
+  expenses: {
+    sheet: 'Expenses', key: 1, cols: [
+      { name: 'Date', type: 'date', req: true },
+      { name: 'Expense / Purpose', req: true },
+      { name: 'Category' },
+      { name: 'Amount', type: 'number', req: true },
+      { name: 'Purchased By' },
+      { name: 'Payment Method' },
+      { name: 'Notes' },
+    ],
+  },
   // First timers handed to a leader for follow-up. EnteredBy / UpdatedOn are filled by the server.
   consolidation: {
     sheet: 'Consolidation', key: 1, cols: [
@@ -118,14 +130,14 @@ const CONSO_STATUSES = ['PENDING', 'CONTACTED', 'DONE']
 // What each role may read / write. Keep in sync with app/lib/access.js
 const ROLES = {
   leader: {
-    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'history', 'consolidation'],
-    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'],
+    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'expenses', 'ygl', 'history', 'consolidation'],
+    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'expenses', 'consolidation'],
     ops: ['add', 'update', 'delete'],
     manageAccounts: true, notify: true, mail: true, checkin: true, firstTimer: true,
   },
   admin: {
-    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'ygl', 'consolidation'],
-    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'],
+    read: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'expenses', 'ygl', 'consolidation'],
+    write: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'expenses', 'consolidation'],
     ops: ['add', 'update', 'delete'],
     mail: true, checkin: true, firstTimer: true,
   },
@@ -633,7 +645,7 @@ function writeRow_(user, op, req) {
 
     if (op === 'add') {
       const vals = cleanValues_(t, req.values)
-      sh = table === 'consolidation' ? ensureConsoSheet_(ss) : ss.getSheetByName(t.sheet)
+      sh = (table === 'consolidation' || table === 'expenses') ? ensureSheet_(ss, t) : ss.getSheetByName(t.sheet)
       if (!sh) throw new Error(t.sheet + ' sheet not found')
       let extra = ''
       if (table === 'members') {
@@ -690,9 +702,10 @@ function writeRow_(user, op, req) {
   }
 }
 
-/** Consolidation sheet is created on first use so no manual setup is needed. */
-function ensureConsoSheet_(ss) {
-  const t = TABLES.consolidation
+/** Consolidation / Expenses sheets are created on first use so no manual setup is needed. */
+function ensureConsoSheet_(ss) { return ensureSheet_(ss, TABLES.consolidation) }
+
+function ensureSheet_(ss, t) {
   let sh = ss.getSheetByName(t.sheet)
   if (!sh) {
     sh = ss.insertSheet(t.sheet)

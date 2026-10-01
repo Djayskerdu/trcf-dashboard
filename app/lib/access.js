@@ -2,8 +2,13 @@
 // (the server enforces this too — this file only decides what the UI shows).
 
 export const ROLE_TABS = {
+<<<<<<< HEAD
   leader: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'FollowUp', 'QR Scan', 'Manage Data', 'Accounts'],
   admin: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'FollowUp', 'QR Scan', 'Manage Data'],
+=======
+  leader: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'Expenses', 'FollowUp', 'QR Scan', 'Manage Data', 'Accounts'],
+  admin: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'Expenses', 'FollowUp', 'QR Scan', 'Manage Data'],
+>>>>>>> fd31f2d (Align First Timer card details and hide phone number)
   conso_head: ['Homepage', 'Attendance', 'First Timers', 'Streaks', 'Consolidation'],
   conso_staff: ['Homepage', 'Attendance', 'First Timers', 'Streaks', 'Consolidation'],
   staff: ['Homepage', 'Attendance', 'Leaders', 'Events'],                 // view only
@@ -13,8 +18,8 @@ export const ROLE_TABS = {
 ROLE_TABS.consolidation = ROLE_TABS.conso_staff
 
 export const ROLE_WRITE = {
-  leader: { tables: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'], ops: ['add', 'update', 'delete'] },
-  admin: { tables: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'consolidation'], ops: ['add', 'update', 'delete'] },
+  leader: { tables: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'expenses', 'consolidation'], ops: ['add', 'update', 'delete'] },
+  admin: { tables: ['attendance', 'members', 'followup', 'events', 'leaders', 'finance', 'expenses', 'consolidation'], ops: ['add', 'update', 'delete'] },
   staff: { tables: [], ops: [] },
   attendance_staff: { tables: ['attendance'], ops: ['add'] },
   conso_head: { tables: ['consolidation'], ops: ['add', 'update', 'delete'] },

@@ -29,6 +29,10 @@ import {
   UserPlus,
   HeartHandshake,
   Flame,
+<<<<<<< HEAD
+=======
+  Receipt,
+>>>>>>> fd31f2d (Align First Timer card details and hide phone number)
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
@@ -37,6 +41,10 @@ import RegularMembers from './components/RegularMembers'
 import FirstTimers from './components/FirstTimers'
 import Consolidation from './components/Consolidation'
 import Streaks from './components/Streaks'
+<<<<<<< HEAD
+=======
+import Expenses from './components/Expenses'
+>>>>>>> fd31f2d (Align First Timer card details and hide phone number)
 import AccountsPanel from './components/AccountsPanel'
 import ChangePassword from './components/ChangePassword'
 import { api, loadSession, saveSession, clearSession } from './lib/api'
@@ -55,6 +63,7 @@ import {
   CartesianGrid,
   BarChart,
   Bar,
+  Legend,
 } from 'recharts'
 
 const ALL_TABS = [
@@ -68,6 +77,7 @@ const ALL_TABS = [
   { name: 'Events', icon: <Calendar size={18} /> },
   { name: 'Leaders', icon: <Users size={18} /> },
   { name: 'Finance', icon: <HandCoins size={18} /> },
+  { name: 'Expenses', icon: <Receipt size={18} /> },
   { name: 'FollowUp', icon: <UserRoundCheck size={18} /> },
   { name: 'QR Scan', icon: <QrCode size={18} /> },
   { name: 'Manage Data', icon: <Database size={18} /> },
@@ -85,6 +95,7 @@ const TAB_SUBTITLE = {
   Events: 'What’s coming up and what’s passed',
   Leaders: 'Your leaders and the people they’re discipling',
   Finance: 'Giving records',
+  Expenses: 'What we bought for the Youth Jam, paid from Tithes & Offering',
   FollowUp: 'First timers waiting for a friendly hello',
   'QR Scan': 'Scan a pass to mark attendance',
   'Manage Data': 'Add, edit and clean up records',
@@ -160,6 +171,7 @@ const handleSendFirstTimersBulk = async () => {
   const [streaks, setStreaks] = useState([])
   const [followup, setFollowup] = useState([])
   const [finance, setFinance] = useState([])
+  const [expenses, setExpenses] = useState([])
   const [members, setMembers] = useState([]) // ← ADD HERE
   const [qrMemberId, setQrMemberId] =
   useState('')
@@ -600,6 +612,7 @@ setConsolidation(res.consolidation || [])
 setStreaks(res.streaks || [])
 setFollowup(res.followup || [])
 setFinance(res.finance || [])
+setExpenses(res.expenses || [])
 setHistory(
   res.history || []
 )
@@ -781,27 +794,38 @@ setMembers(res.members || [])
 
 const financeChartData = useMemo(() => {
 
-  const grouped = {}
+  // Weekly totals, oldest -> newest, so bars always run left to right in date order.
+  const num = (v) => Number(String(v ?? '').replace(/[^0-9.\-]/g, '')) || 0
+  const byDay = {}
 
   finance.forEach((f) => {
-
-    if (f.giving !== 'Tithes and Offering') return
-
-    const date = new Date(f.date)
-    if (isNaN(date)) return
-
-    const key = formatDate(date)
-
-    grouped[key] =
-      (grouped[key] || 0) + Number(f.amount || 0)
+    if (!/tithe|offering/i.test(String(f.giving || ''))) return
+    const day = formatDate(f.date)
+    if (!day) return
+    byDay[day] = byDay[day] || { amount: 0, expenses: 0 }
+    byDay[day].amount += num(f.amount)
   })
 
-  return Object.keys(grouped).map((date) => ({
-    name: date,
-    amount: grouped[date],
-  }))
+  expenses.slice(1).forEach((r) => {
+    const day = formatDate(r[0])
+    if (!day) return
+    byDay[day] = byDay[day] || { amount: 0, expenses: 0 }
+    byDay[day].expenses += num(r[3])
+  })
 
-}, [finance])
+  return Object.keys(byDay).sort().map((day) => {
+    const [y, m, d] = day.split('-').map(Number)
+    const dt = new Date(y, m - 1, d)
+    return {
+      day,
+      name: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      full: dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      amount: byDay[day].amount,
+      expenses: byDay[day].expenses,
+    }
+  })
+
+}, [finance, expenses])
 
   /* ================= ATTENDANCE FILTER ================= */
 
@@ -1182,7 +1206,7 @@ const financeChartData = useMemo(() => {
 
               <StatCard
                 title="Giving"
-                value={finance.reduce((sum, f) => sum + Number(f.amount || 0), 0)}
+                value={finance.reduce((sum, f) => sum + (Number(String(f.amount ?? '').replace(/,/g, '')) || 0), 0)}
                 color="purple"
               />
 
@@ -1236,12 +1260,68 @@ const financeChartData = useMemo(() => {
     <h3>Tithes & Offering</h3>
 
     <ResponsiveContainer width="100%" height={240}>
-      <BarChart data={financeChartData}>
-        <CartesianGrid strokeDasharray="1 1" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Bar dataKey="amount" fill="#8b5cf6" />
+      <BarChart
+        data={financeChartData}
+        margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+        barGap={2}
+      >
+        <CartesianGrid
+          vertical={false}
+          stroke="rgba(255,255,255,0.08)"
+        />
+        <XAxis
+          dataKey="name"
+          tick={{ fill: '#93a4dc', fontSize: 11 }}
+          tickLine={false}
+          axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
+          interval="preserveStartEnd"
+          minTickGap={24}
+        />
+        <YAxis
+          tick={{ fill: '#93a4dc', fontSize: 11 }}
+          tickLine={false}
+          axisLine={false}
+          width={48}
+          tickFormatter={(v) =>
+            v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : v
+          }
+        />
+        <Tooltip
+          cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+          labelFormatter={(_, p) => p?.[0]?.payload?.full || ''}
+          formatter={(v, n) => [
+            `₱${Number(v).toLocaleString()}`,
+            n,
+          ]}
+          contentStyle={{
+            background: '#0e1636',
+            border: '1px solid rgba(255,255,255,0.14)',
+            borderRadius: 12,
+            color: '#eef2ff',
+            fontSize: 12,
+          }}
+          labelStyle={{ color: '#eef2ff', fontWeight: 700 }}
+          itemStyle={{ color: '#eef2ff' }}
+        />
+        <Legend
+          iconType="circle"
+          iconSize={8}
+          wrapperStyle={{ fontSize: 12, color: '#93a4dc' }}
+        />
+        <Bar
+          name="Tithes & Offering"
+          dataKey="amount"
+          fill="#8c52ff"
+          radius={[6, 6, 0, 0]}
+          maxBarSize={28}
+        />
+        <Bar
+          name="Expenses"
+          dataKey="expenses"
+          fill="#ffa53d"
+          radius={[6, 6, 0, 0]}
+          maxBarSize={28}
+        />
       </BarChart>
     </ResponsiveContainer>
   </div>
@@ -2797,6 +2877,32 @@ underRaw
   )
 )}
 
+{/* EXPENSES */}
+{activeTab === 'Expenses' && (
+
+  !(isLeader || isAdmin) ? (
+
+    <div className="glass panel">
+      <h3>Access Denied</h3>
+      <p style={{ marginTop: '10px', opacity: 0.7 }}>
+        Only Leaders and Admins can access Expenses.
+      </p>
+    </div>
+
+  ) : (
+
+    <Expenses
+      expenses={expenses}
+      finance={finance}
+      leaders={leaders}
+      members={members}
+      refs={refs}
+      onChanged={fetchData}
+    />
+
+  )
+)}
+
 {/* QR SCANNER */}
 {activeTab === 'Manage Data' && (
 
@@ -2812,6 +2918,7 @@ underRaw
       events,
       leaders,
       finance,
+      expenses,
       consolidation,
     }}
   />

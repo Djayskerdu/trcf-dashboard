@@ -326,7 +326,8 @@ h1, h2, h3, h4,
 .stat-card.blue,
 .stat-card.green,
 .stat-card.orange,
-.stat-card.purple {
+.stat-card.purple,
+.stat-card.red {
   background:
     radial-gradient(240px 120px at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
     var(--surface-solid);
@@ -678,3 +679,13 @@ h1, h2, h3, h4,
   width: 32px;
   height: 32px;
 }
+
+/* ================= EXPENSES ================= */
+.stat-card.red { --accent: var(--rose); }
+.stat-card.red h2 { color: var(--rose); }
+.exp-cats { display: grid; gap: 12px; margin-top: 14px; }
+.exp-cat-top { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 6px; }
+.exp-cat-top span { color: var(--muted); }
+.exp-cat-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.exp-cat-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--amber), var(--rose)); transition: width 0.4s var(--ease); }
+.recharts-legend-item-text { color: var(--muted) !important; }

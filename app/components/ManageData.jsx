@@ -52,6 +52,7 @@ export default function ManageData({ data, refs, role, onChanged, search = '' })
         const v = String(r[i] ?? '').trim()
         if (v && v !== 'N/A') set.add(v)
       })
+      ;(f.defaults || []).forEach((d) => set.add(d))
       if (f.suggest === 'leaders') {
         ;(data.leaders || []).slice(1).forEach((l) => l[1] && set.add(String(l[1]).trim()))
         ;(data.members || []).slice(1).forEach((m) => m[6] && m[6] !== 'N/A' && set.add(String(m[6]).trim()))
