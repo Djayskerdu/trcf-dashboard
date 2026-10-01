@@ -1,11 +1,19 @@
 import './globals.css'
 import './rebrand.css'
+import './mobile.css'
 import Script from 'next/script'
 import OneSignalClient from './OneSignalClient'
 
 export const metadata = {
   title: 'TRCF Youth Jam DATABASE',
   description: 'TRCF Youth Jam Dashboard',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',   // lets the app use the notch area; safe-area padding is in mobile.css
+  themeColor: '#070b1f',
 }
 
 export default function RootLayout({
