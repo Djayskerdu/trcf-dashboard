@@ -28,6 +28,7 @@ import {
   ClipboardCheck,
   UserPlus,
   HeartHandshake,
+  Flame,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
@@ -35,6 +36,7 @@ import ManageData from './components/ManageData'
 import RegularMembers from './components/RegularMembers'
 import FirstTimers from './components/FirstTimers'
 import Consolidation from './components/Consolidation'
+import Streaks from './components/Streaks'
 import AccountsPanel from './components/AccountsPanel'
 import ChangePassword from './components/ChangePassword'
 import { api, loadSession, saveSession, clearSession } from './lib/api'
@@ -61,6 +63,7 @@ const ALL_TABS = [
   { name: 'Attendance', icon: <ClipboardList size={18} /> },
   { name: 'Regular Members', icon: <ClipboardCheck size={18} /> },
   { name: 'First Timers', icon: <UserPlus size={18} /> },
+  { name: 'Streaks', icon: <Flame size={18} /> },
   { name: 'Consolidation', icon: <HeartHandshake size={18} /> },
   { name: 'Events', icon: <Calendar size={18} /> },
   { name: 'Leaders', icon: <Users size={18} /> },
@@ -77,6 +80,7 @@ const TAB_SUBTITLE = {
   Attendance: 'Who came and when',
   'Regular Members': 'Tick who’s here today — spot who needs a follow-up',
   'First Timers': 'Type in today’s first timers and assign a leader',
+  Streaks: 'First timers: 5 Fridays in a row for the reward',
   Consolidation: 'Assign first timers to a leader and track the follow-up',
   Events: 'What’s coming up and what’s passed',
   Leaders: 'Your leaders and the people they’re discipling',
@@ -153,6 +157,7 @@ const handleSendFirstTimersBulk = async () => {
   const [events, setEvents] = useState([])
   const [leaders, setLeaders] = useState([])
   const [consolidation, setConsolidation] = useState([])
+  const [streaks, setStreaks] = useState([])
   const [followup, setFollowup] = useState([])
   const [finance, setFinance] = useState([])
   const [members, setMembers] = useState([]) // ← ADD HERE
@@ -592,6 +597,7 @@ useEffect(() => {
 setEvents(res.events || [])
 setLeaders(res.leaders || [])
 setConsolidation(res.consolidation || [])
+setStreaks(res.streaks || [])
 setFollowup(res.followup || [])
 setFinance(res.finance || [])
 setHistory(
@@ -1500,6 +1506,11 @@ const financeChartData = useMemo(() => {
     refs={refs}
     onChanged={fetchData}
   />
+)}
+
+{/* STREAKS */}
+{activeTab === 'Streaks' && (
+  <Streaks streaks={streaks} attendance={attendance} onChanged={fetchData} />
 )}
 
 {/* CONSOLIDATION (conso staff enter, conso head follows up) */}
