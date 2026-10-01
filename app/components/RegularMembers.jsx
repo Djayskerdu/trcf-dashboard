@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Cake, Users, Phone, Mail, QrCode, CalendarCheck, AlertTriangle } from 'lucide-react'
 import Modal from './Modal'
+import Pager from './Pager'
 import { api } from '../lib/api'
 import { ymd } from '../lib/tables'
 
@@ -28,10 +29,22 @@ const prettyDay = (key) => {
 export default function RegularMembers({ members, attendance, onChanged, search = '' }) {
   const [date, setDate] = useState(() => ymd(new Date()))
   const [showFollowUps, setShowFollowUps] = useState(false) // collapsed by default so the page stays calm
-  const [override, setOverride] = useState({}) // name -> true/false while a save is in flight
+  const [local, setLocal] = useState({}) // "date|name" -> true/false: ticks shown instantly, before the server confirms
   const [selected, setSelected] = useState(null) // member row
   const [error, setError] = useState('')
+  const [status, setStatus] = useState('idle') // idle | pending | saving | saved
   const [onlyFollowUp, setOnlyFollowUp] = useState(false)
+  const [tab, setTab] = useState('Male')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(15)
+
+  // Ticks are collected for a moment and sent as ONE request (one sheet read, one write).
+  const queueRef = useRef({})
+  const timerRef = useRef(null)
+  const chainRef = useRef(Promise.resolve())
+  const pendingRef = useRef(0)
+  const onChangedRef = useRef(onChanged)
+  useEffect(() => { onChangedRef.current = onChanged }, [onChanged])
 
   const list = useMemo(
     () =>
@@ -66,8 +79,8 @@ export default function RegularMembers({ members, attendance, onChanged, search 
   }, [attendance, date])
 
   const isPresent = (name) => {
-    const k = norm(name)
-    return k in override ? override[k] : presentToday.has(k)
+    const k = `${date}|${norm(name)}`
+    return k in local ? local[k] : presentToday.has(norm(name))
   }
 
   // First timers are typed in by the Consolidation Team (First Timers tab); here we only count them.
@@ -108,22 +121,72 @@ export default function RegularMembers({ members, attendance, onChanged, search 
   const missedOf = (name) => missed[norm(name)] || 0
   const needsFollowUp = (m) => !isPresent(m.name) && missedOf(m.name) >= ABSENT_LIMIT
 
-  const toggle = async (name) => {
-    const k = norm(name)
+  const keyOf = (name) => `${date}|${norm(name)}`
+
+  const flush = useCallback(() => {
+    clearTimeout(timerRef.current)
+    const items = Object.values(queueRef.current)
+    queueRef.current = {}
+    if (!items.length) return
+    pendingRef.current += 1
+    setStatus('saving')
+
+    // batches run one after another so ticks always land in the order they were made
+    chainRef.current = chainRef.current.then(async () => {
+      try {
+        const changes = items.map(({ name, date: day, present }) => ({ name, date: day, present }))
+        try {
+          await api('setPresentBatch', { changes })
+        } catch (err) {
+          // backend not updated yet -> fall back to one request per name
+          if (!/unknown action/i.test(err.message)) throw err
+          for (const c of changes) await api('setPresent', c)
+        }
+      } catch (err) {
+        setError(`Couldn't save: ${err.message}`)
+        setLocal((l) => {
+          const n = { ...l }
+          items.forEach((i) => delete n[i.key])
+          return n
+        })
+      }
+      pendingRef.current -= 1
+      if (pendingRef.current > 0) return
+      try { await onChangedRef.current() } catch {}
+      if (pendingRef.current === 0 && !Object.keys(queueRef.current).length) {
+        setLocal({}) // the refreshed data now matches what was ticked
+        setStatus('saved')
+      }
+    })
+  }, [])
+
+  // never lose ticks: send what is waiting if the page is hidden or closed
+  useEffect(() => {
+    const hide = () => { if (document.hidden) flush() }
+    document.addEventListener('visibilitychange', hide)
+    window.addEventListener('pagehide', flush)
+    return () => {
+      document.removeEventListener('visibilitychange', hide)
+      window.removeEventListener('pagehide', flush)
+      flush()
+    }
+  }, [flush])
+
+  const toggle = (name) => {
+    const k = keyOf(name)
     const next = !isPresent(name)
     setError('')
-    setOverride((o) => ({ ...o, [k]: next }))
-    try {
-      await api('setPresent', { name, date, present: next })
-      await onChanged()
-    } catch (err) {
-      setError(`Couldn't save ${name}: ${err.message}`)
-    } finally {
-      setOverride((o) => {
-        const { [k]: _drop, ...rest } = o
-        return rest
-      })
-    }
+    setLocal((l) => ({ ...l, [k]: next }))
+    queueRef.current[k] = { key: k, name, date, present: next }
+    setStatus('pending')
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(flush, 500)
+  }
+
+  const changeDate = (value) => {
+    if (!value) return
+    flush() // save ticks for the old date first
+    setDate(value)
   }
 
   const q = norm(search)
@@ -141,40 +204,27 @@ export default function RegularMembers({ members, attendance, onChanged, search 
     .sort((a, b) => missedOf(b.name) - missedOf(a.name) || a.name.localeCompare(b.name))
   const lastSeenOf = (name) => (history[norm(name)] || []).find((d) => d < date) || ''
 
-  const Column = ({ title, items }) => (
-    <div className="rm-col">
-      <h4 className="rm-col-title">
-        {title} <span>{items.filter((m) => isPresent(m.name)).length}/{items.length}</span>
-      </h4>
-      <div className="rm-list">
-      {items.map((m) => {
-        const on = isPresent(m.name)
-        const flagged = needsFollowUp(m)
-        return (
-          <div key={m.id || m.name} className={`rm-row ${on ? 'on' : ''} ${flagged ? 'alert' : ''}`}>
-            <button
-              type="button"
-              className="rm-check"
-              role="checkbox"
-              aria-checked={on}
-              aria-label={`Mark ${m.name} ${on ? 'absent' : 'present'}`}
-              onClick={() => toggle(m.name)}
-            >
-              {on && <Check size={16} strokeWidth={3} />}
-            </button>
-            <button type="button" className="rm-name" onClick={() => setSelected(m)}>
-              {m.name}
-            </button>
-            {flagged && (
-              <span className="rm-dot" title={`Missed the last ${missedOf(m.name)} Youth Jams in a row`} aria-label={`Missed ${missedOf(m.name)} in a row`} />
-            )}
-          </div>
-        )
-      })}
-      </div>
-      {!items.length && <p className="rm-empty">{onlyFollowUp ? 'No one needs follow-up here.' : `No one here${q ? ' matches your search' : ''}.`}</p>}
-    </div>
-  )
+  const hasOther = list.some((m) => !['male', 'female'].includes(m.gender.toLowerCase()))
+  const activeTab = tab === 'Other' && !hasOther ? 'Male' : tab
+  const tabs = [
+    { id: 'Male', label: 'Male', all: list.filter((m) => m.gender.toLowerCase() === 'male'), shown: male },
+    { id: 'Female', label: 'Female', all: list.filter((m) => m.gender.toLowerCase() === 'female'), shown: female },
+    ...(hasOther
+      ? [{ id: 'Other', label: 'Not set', all: list.filter((m) => !['male', 'female'].includes(m.gender.toLowerCase())), shown: other }]
+      : []),
+  ]
+  const current = tabs.find((t) => t.id === activeTab) || tabs[0]
+  const pages = Math.max(1, Math.ceil(current.shown.length / pageSize))
+  const safePage = Math.min(page, pages)
+  const pageRows = current.shown.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  // back to page 1 whenever the list changes
+  const listKey = `${tab}|${q}|${onlyFollowUp}|${pageSize}`
+  const [prevKey, setPrevKey] = useState(listKey)
+  if (prevKey !== listKey) {
+    setPrevKey(listKey)
+    setPage(1)
+  }
 
   const sel = selected
   const selDays = sel ? history[norm(sel.name)] || [] : []
@@ -190,8 +240,24 @@ export default function RegularMembers({ members, attendance, onChanged, search 
         </div>
         <div className="date-input-group">
           <label>Attendance date</label>
-          <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
+          <input type="date" value={date} onChange={(e) => changeDate(e.target.value)} />
         </div>
+      </div>
+
+      <div className="rm-seg" role="tablist" aria-label="Show members by gender">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={t.id === activeTab}
+            className={`rm-seg-btn ${t.id === activeTab ? 'is-on' : ''}`}
+            onClick={() => setTab(t.id)}
+          >
+            <span>{t.label}</span>
+            <small>{t.all.filter((m) => isPresent(m.name)).length}/{t.all.length}</small>
+          </button>
+        ))}
       </div>
 
       <div className="attendance-stats-row">
@@ -210,6 +276,48 @@ export default function RegularMembers({ members, attendance, onChanged, search 
       </div>
 
       {error && <div className="form-error" role="alert">{error}</div>}
+      <p className={`rm-status ${status}`} aria-live="polite">
+        {status === 'pending' || status === 'saving' ? 'Saving…' : status === 'saved' ? '✓ All changes saved' : ''}
+      </p>
+
+      <div className="rm-list rm-paged">
+        {pageRows.map((m) => {
+          const on = isPresent(m.name)
+          const flagged = needsFollowUp(m)
+          return (
+            <div key={m.id || m.name} className={`rm-row ${on ? 'on' : ''} ${flagged ? 'alert' : ''}`}>
+              <button
+                type="button"
+                className="rm-check"
+                role="checkbox"
+                aria-checked={on}
+                aria-label={`Mark ${m.name} ${on ? 'absent' : 'present'}`}
+                onClick={() => toggle(m.name)}
+              >
+                {on && <Check size={16} strokeWidth={3} />}
+              </button>
+              <button type="button" className="rm-name" onClick={() => setSelected(m)}>
+                {m.name}
+              </button>
+              {flagged && (
+                <span className="rm-dot" title={`Missed the last ${missedOf(m.name)} Youth Jams in a row`} aria-label={`Missed ${missedOf(m.name)} in a row`} />
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {!current.shown.length && (
+        <p className="rm-empty">{onlyFollowUp ? 'No one needs follow-up here.' : `No one here${q ? ' matches your search' : ''}.`}</p>
+      )}
+
+      <Pager
+        total={current.shown.length}
+        page={safePage}
+        pageSize={pageSize}
+        onPage={setPage}
+        onPageSize={setPageSize}
+        sizes={[10, 15, 25, 50]}
+      />
 
       <div className="rm-followup">
         <div className="rm-followup-head">
@@ -247,16 +355,6 @@ export default function RegularMembers({ members, attendance, onChanged, search 
           <p className="rm-empty">Everyone has been around recently. 🎉</p>
         )}
       </div>
-
-      <div className="rm-grid">
-        {Column({ title: 'Male', items: male })}
-        {Column({ title: 'Female', items: female })}
-      </div>
-      {other.length > 0 && (
-        <div className="rm-grid one">
-          {Column({ title: 'Gender not set', items: other })}
-        </div>
-      )}
 
       {sel && (
         <Modal title={sel.name} onClose={() => setSelected(null)}>
