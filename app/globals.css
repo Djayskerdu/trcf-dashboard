@@ -3743,3 +3743,52 @@ font-size: 14px;
 .conso-streak { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
 .streak-dots.mini { gap: 4px; }
 .streak-dots.mini .dot { width: 22px; height: 22px; font-size: 10px; }
+
+/* ================= REGULAR MEMBERS: MALE / FEMALE BUTTONS + PAGED LIST ================= */
+.rm-seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+  margin: 16px 0 10px;
+  padding: 5px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+.rm-seg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: #c9d4ff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.rm-seg-btn span { white-space: nowrap; }
+.rm-seg-btn small {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  font-size: 12px;
+  font-weight: 700;
+}
+.rm-seg-btn:hover:not(.is-on) { background: rgba(255, 255, 255, .06); }
+.rm-seg-btn.is-on {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(37, 99, 235, .35);
+}
+.rm-seg-btn.is-on small { background: rgba(255, 255, 255, .22); }
+.rm-status { min-height: 18px; margin: 6px 2px 0; font-size: 12px; font-weight: 600; color: #93a4dc; }
+.rm-status.saved { color: #34d399; }
+.rm-paged { margin-top: 4px; }
+.rm-paged + .pager { margin-top: 12px; }
