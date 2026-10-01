@@ -29,10 +29,7 @@ import {
   UserPlus,
   HeartHandshake,
   Flame,
-<<<<<<< HEAD
-=======
   Receipt,
->>>>>>> fd31f2d (Align First Timer card details and hide phone number)
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
@@ -41,10 +38,7 @@ import RegularMembers from './components/RegularMembers'
 import FirstTimers from './components/FirstTimers'
 import Consolidation from './components/Consolidation'
 import Streaks from './components/Streaks'
-<<<<<<< HEAD
-=======
 import Expenses from './components/Expenses'
->>>>>>> fd31f2d (Align First Timer card details and hide phone number)
 import AccountsPanel from './components/AccountsPanel'
 import ChangePassword from './components/ChangePassword'
 import { api, loadSession, saveSession, clearSession } from './lib/api'

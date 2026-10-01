@@ -2,8 +2,8 @@
 // (the server enforces this too — this file only decides what the UI shows).
 
 export const ROLE_TABS = {
-  leader: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'FollowUp', 'QR Scan', 'Manage Data', 'Accounts'],
-  admin: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'FollowUp', 'QR Scan', 'Manage Data'],
+  leader: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'Expenses', 'FollowUp', 'QR Scan', 'Manage Data', 'Accounts'],
+  admin: ['Homepage', 'Dashboard', 'Attendance', 'Regular Members', 'First Timers', 'Streaks', 'Consolidation', 'Events', 'Leaders', 'Finance', 'Expenses', 'FollowUp', 'QR Scan', 'Manage Data'],
   conso_head: ['Homepage', 'Attendance', 'First Timers', 'Streaks', 'Consolidation'],
   conso_staff: ['Homepage', 'Attendance', 'First Timers', 'Streaks', 'Consolidation'],
   staff: ['Homepage', 'Attendance', 'Leaders', 'Events'],                 // view only
