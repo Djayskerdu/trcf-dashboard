@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Phone, Pencil, Trash2, AlertTriangle, Check } from 'lucide-react'
+import { Phone, Pencil, Trash2, AlertTriangle, Check, Flame, Gift } from 'lucide-react'
 import Modal from './Modal'
 import { api } from '../lib/api'
 import { ymd } from '../lib/tables'
@@ -39,7 +39,7 @@ const phoneOf = (raw) => {
   return digits.length === 10 && digits.startsWith('9') ? '0' + digits : digits
 }
 
-export default function Consolidation({ me, members, leaders, consolidation, refs, attendance, onChanged }) {
+export default function Consolidation({ me, members, leaders, consolidation, refs, attendance, streaks, onChanged }) {
   const isManager = CONSO_MANAGERS.includes(me.role)
   const canDelete = isManager
 
@@ -49,6 +49,26 @@ export default function Consolidation({ me, members, leaders, consolidation, ref
   const [edit, setEdit] = useState(null) // entry being edited
   const [editError, setEditError] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
+
+  const streakBy = useMemo(() => new Map((streaks || []).map((x) => [norm(x.name), x])), [streaks])
+  const presentOn = useMemo(() => {
+    const set = new Set()
+    ;(attendance || []).slice(1).forEach((r) => { if (dayOf(r[0]) === date) set.add(norm(r[1])) })
+    return set
+  }, [attendance, date])
+
+  const toggleHere = async (name) => {
+    setBusy(true); setError('')
+    try {
+      const res = await api('setPresent', { name, date, present: !presentOn.has(norm(name)) })
+      if (res.promoted) setError(`🎉 ${name} reached 3 visits and is now a Regular Member.`)
+      await onChanged()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const leaderList = useMemo(() => {
     const seen = new Map()
@@ -163,6 +183,28 @@ export default function Consolidation({ me, members, leaders, consolidation, ref
           {showLeader && ` · → ${e.leader}`}
         </span>
         {e.notes && <span className="conso-note">{e.notes}</span>}
+        {streakBy.get(norm(e.name)) && (() => {
+          const k = streakBy.get(norm(e.name))
+          const here = presentOn.has(norm(e.name))
+          return (
+            <span className="conso-streak">
+              <span className="streak-dots mini">
+                {Array.from({ length: k.goal }).map((_, i) => (
+                  <span key={i} className={i < Math.min(k.streak, k.goal) ? 'dot on' : 'dot'}>{i < Math.min(k.streak, k.goal) ? <Flame size={11} /> : i + 1}</span>
+                ))}
+              </span>
+              <span className="conso-meta">
+                {k.visits} visit{k.visits === 1 ? '' : 's'}{k.isMember ? ' · Regular Member' : ''}
+                {k.rewardEarned && !k.rewardClaimed ? ' · 🎁 reward ready' : ''}
+              </span>
+              {isManager && (
+                <button type="button" className={`rm-chip ${here ? 'is-on' : ''}`} disabled={busy} onClick={() => toggleHere(e.name)}>
+                  {here ? `✓ Here ${prettyDay(date)}` : 'Came back today'}
+                </button>
+              )}
+            </span>
+          )
+        })()}
       </div>
       {isManager ? (
         <select
