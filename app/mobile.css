@@ -94,7 +94,6 @@ body { overscroll-behavior-y: none; }
   .calendar-grid > *, .calendar-days > * { min-width: 0; }
 
   /* ---- charts ---- */
-  .recharts-wrapper { max-width: 100%; }
   .chart-card, .chart-box { min-width: 0; overflow: hidden; }
 
   /* ---- modals become bottom sheets ---- */
@@ -191,3 +190,7 @@ body { overscroll-behavior-y: auto; touch-action: pan-y pinch-zoom; }
   .pager-controls { flex-wrap: wrap; justify-content: space-between; gap: 8px; }
   .pager-btn { min-width: 44px; }
 }
+
+/* Recharts 3 wraps each chart in a zero-width helper div, so `max-width: 100%` on
+   .recharts-wrapper squashes the chart to 0px. Never constrain it that way. */
+.recharts-wrapper { max-width: none !important; }
