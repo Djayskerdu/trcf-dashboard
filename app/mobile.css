@@ -1,0 +1,170 @@
+/* ==========================================================================
+   PHONE LAYOUT  (loaded last, so it wins over globals.css / rebrand.css)
+   Everything is inside media queries - desktop is untouched.
+   ========================================================================== */
+
+html { -webkit-text-size-adjust: 100%; }
+body { overscroll-behavior-y: none; }
+
+@media (max-width: 1000px) {
+  /* ---- app shell ---- */
+  .content { padding: 10px 10px calc(24px + env(safe-area-inset-bottom)) !important; }
+  .mobile-topbar {
+    position: sticky; top: 0; z-index: 50;
+    padding-top: calc(8px + env(safe-area-inset-top)) !important;
+    margin: 0 !important; border-radius: 0 0 16px 16px !important;
+  }
+  .sidebar {
+    width: min(82vw, 300px) !important;
+    height: 100dvh !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+    overscroll-behavior: contain;
+  }
+  .sidebar a, .sidebar button, .sidebar li { min-height: 44px; }
+
+  /* ---- page header + cards: stop stacking padding ---- */
+  .topbar { padding: 14px !important; gap: 10px !important; border-radius: 18px !important; }
+  .topbar h1 { font-size: 24px !important; line-height: 1.15; }
+  .topbar p { font-size: 13px; }
+  .topbar-right, .search-box { width: 100% !important; }
+  .panel, .dashboard-filter { padding: 14px !important; border-radius: 18px !important; }
+  .panel-header { gap: 10px !important; margin-bottom: 12px; }
+  .panel-header h3 { font-size: 18px; }
+  .panel-header > *, .dashboard-filter-right, .date-input-group { width: 100%; max-width: 100%; }
+  .date-input-group { display: flex; flex-direction: column; gap: 4px; }
+  .stats-grid, .chart-grid { gap: 10px !important; }
+  .stat-card { padding: 16px !important; }
+  .stat-card h2 { font-size: 30px !important; }
+
+  /* ---- forms: 16px stops iOS auto-zoom; 44px = comfortable thumb target ---- */
+  input, select, textarea { font-size: 16px !important; max-width: 100%; min-width: 0; }
+  input:not([type=checkbox]):not([type=radio]), select { min-height: 44px; }
+  input[type=date], input[type=time] { width: 100%; box-sizing: border-box; }
+  button, .reset-btn, .btn-ghost, .rm-chip, .icon-btn { min-height: 44px; touch-action: manipulation; }
+  .icon-btn { min-width: 44px; }
+  .reset-btn { padding-inline: 18px; }
+  .form-grid, .conso-form { grid-template-columns: 1fr !important; }
+  .form-actions { position: sticky; bottom: 0; flex-wrap: wrap; padding-top: 8px; }
+  .form-actions > * { flex: 1 1 140px; }
+
+  /* date-range rows: label above field, buttons share a row */
+  .table-date, .table-filters, .filter-row { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .table-date .reset-btn, .table-filters .reset-btn, .filter-row .reset-btn { width: 100%; }
+
+  /* ---- stat boxes: compact, 2-3 across ---- */
+  .attendance-stats-row, .event-stats { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px !important; width: 100%; }
+  .event-stat-box { min-width: 0 !important; padding: 10px 8px !important; border-radius: 14px !important; }
+  .event-stat-box span { font-size: 11px; line-height: 1.25; }
+  .event-stat-box h3 { font-size: 22px !important; margin: 0; }
+
+  /* ---- tables: scroll inside the card, never push the page sideways ---- */
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-inline: -4px; border-radius: 12px; }
+  .table-wrapper table { min-width: 520px; }
+  .table-wrapper th, .table-wrapper td { padding: 10px 10px !important; font-size: 13px; white-space: nowrap; }
+  .table-wrapper.table-fit table { min-width: 0; }
+  .table-wrapper.table-fit th, .table-wrapper.table-fit td { white-space: normal; }
+
+  /* ---- cards ---- */
+  .followup-grid, .leader-grid, .event-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .followup-card, .leader-card, .event-card { padding: 14px !important; }
+
+  /* ---- Regular Members checklist: one big-target column ---- */
+  .rm-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .rm-list { grid-template-columns: 1fr !important; }
+  .rm-list .rm-row { min-height: 48px; padding: 4px 10px !important; }
+  .rm-list .rm-check { width: 30px !important; height: 30px !important; border-radius: 9px !important; }
+  .rm-list .rm-name { font-size: 15px !important; }
+  .rm-followup { padding: 12px !important; }
+  .rm-followup-head { gap: 8px; }
+  .rm-followup-list { grid-template-columns: 1fr !important; }
+
+  /* ---- streak + conso ---- */
+  .streak-list { grid-template-columns: 1fr !important; }
+  .streak-dots .dot { width: 36px; height: 36px; }
+  .streak-actions .reset-btn { flex: 1 1 140px; }
+  .conso-row { flex-wrap: wrap; gap: 8px; }
+  .conso-main { flex: 1 1 100%; min-width: 0; }
+  .conso-leader > header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .conso-leader-side { flex-wrap: wrap; }
+  .inline-select { width: 100%; }
+
+  /* ---- calendar ---- */
+  .calendar-panel { padding: 12px !important; }
+  .calendar-grid, .calendar-days { gap: 4px !important; }
+  .calendar-grid > *, .calendar-days > * { min-width: 0; }
+
+  /* ---- charts ---- */
+  .recharts-wrapper { max-width: 100%; }
+  .chart-card, .chart-box { min-width: 0; overflow: hidden; }
+
+  /* ---- modals become bottom sheets ---- */
+  .modal-backdrop { align-items: flex-end !important; padding: 0 !important; }
+  .modal {
+    width: 100% !important; max-width: 100% !important;
+    max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;
+    border-radius: 22px 22px 0 0 !important;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+  .modal-head { position: sticky; top: 0; z-index: 2; }
+
+  /* long words / emails never burst a card */
+  h1, h2, h3, h4, p, span, td, b, strong { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 380px) {
+  .content { padding-inline: 8px !important; }
+  .topbar h1 { font-size: 21px !important; }
+  .attendance-stats-row, .event-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* landscape phones: don't let the sticky bar eat the screen */
+@media (max-width: 1000px) and (max-height: 480px) {
+  .mobile-topbar { position: static; }
+  .modal { max-height: 100dvh; }
+}
+
+/* hover-only effects shouldn't "stick" after a tap */
+@media (hover: none) {
+  .glass:hover, .followup-card:hover, .leader-card:hover, .event-card:hover { transform: none !important; }
+}
+
+/* ---------- second pass (found while testing at 390px) ---------- */
+@media (max-width: 1000px) {
+  /* date / time fields were rendering white and unevenly sized */
+  input[type=date], input[type=time], input[type=month] {
+    color-scheme: dark;
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 14px;
+    padding: 0 14px;
+    height: 46px;
+  }
+  .finance-filter-row { grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin-bottom: 14px !important; }
+  .finance-filter-row input { height: 46px !important; border-radius: 14px !important; }
+  .finance-filter-row > :last-child { grid-column: 1 / -1; }
+
+  /* badges / chips never break mid-word */
+  .streak-badge, .rm-chip, .status-badge, .conso-count, .conso-allgood { white-space: nowrap; }
+  .streak-top { flex-wrap: wrap; gap: 6px; }
+  .streak-badges { justify-content: flex-start; }
+
+  /* calendar: drop the heavy padding so a month fits the screen */
+  .react-calendar { padding: 10px !important; border-radius: 20px !important; max-width: 100% !important; }
+  .react-calendar__tile { padding: 10px 2px !important; }
+  .triple-calendar-grid { gap: 10px !important; }
+  .calendar-slider-wrapper { gap: 8px !important; }
+  .calendar-side-btn { width: 36px !important; height: 36px !important; min-height: 36px; flex: 0 0 36px; padding: 0 !important; }
+  .calendar-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .calendar-filter-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .calendar-filter-group select { width: 100%; }
+
+  /* big number cards (Total Giving etc.) */
+  .stat-card { min-height: 0 !important; }
+  .stat-card h2 { overflow-wrap: normal; }
+}
+
+@media (max-width: 1000px) {
+  .rm-grid > *, .rm-col, .rm-list, .rm-row, .conso-leader, .conso-row { min-width: 0; max-width: 100%; }
+  .rm-col-title { padding-inline: 4px; }
+}
