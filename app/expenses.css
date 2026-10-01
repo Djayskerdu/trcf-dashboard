@@ -1,0 +1,187 @@
+  /* =====================================================================
+   EXPENSES PAGE — scoped under .exp-page so no other tab is affected.
+   Loaded from Expenses.jsx, uses the tokens defined in rebrand.css.
+===================================================================== */
+
+.exp-page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* ---------- summary cards: always 3 across (label on top, amount below) ---------- */
+.exp-page .stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.exp-page .stats-grid > .stat-card {
+  width: auto !important;
+  min-width: 0;
+  min-height: 104px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.exp-page .stat-card > div { width: 100%; }
+
+.exp-page .stat-card p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.exp-page .stat-card h2 {
+  margin: 0;
+  font-size: clamp(20px, 2.6vw, 36px);
+  line-height: 1.05;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* only the smallest phones stack */
+@media (max-width: 520px) {
+  .exp-page .stats-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ---------- panels: full width, consistent padding ---------- */
+.exp-page .panel,
+.exp-page .finance-panel {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 22px 24px;
+}
+
+.exp-page .panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.exp-page .panel-header h3 { margin: 0 0 4px; }
+.exp-page .attendance-count { margin: 0; font-size: 13px; }
+
+/* ---------- inputs / selects / date pickers ---------- */
+.exp-page input[type='date'],
+.exp-page input:not([type]),
+.exp-page input[type='text'],
+.exp-page select {
+  height: 42px;
+  padding: 0 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  color-scheme: dark;              /* dark calendar popup + icon */
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.exp-page input::placeholder { color: var(--muted); opacity: 0.8; }
+
+.exp-page input:focus,
+.exp-page select:focus {
+  border-color: var(--blue);
+  background: rgba(47, 125, 255, 0.06);
+  box-shadow: 0 0 0 4px rgba(47, 125, 255, 0.15);
+}
+
+.exp-page select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2393a4dc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.exp-page select option { background: var(--surface-solid); color: var(--text); }
+
+/* ---------- buttons: same height as the inputs ---------- */
+.exp-page .reset-btn,
+.exp-page .finance-reset-btn {
+  height: 42px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Reset + Print = quiet secondary buttons, Add Expense stays the hero */
+.exp-page .finance-reset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+}
+.exp-page .finance-reset-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: none;
+}
+
+/* ---------- table ---------- */
+.exp-page .table-wrapper { overflow-x: auto; border-radius: var(--r-md); }
+
+.exp-page table { width: 100%; border-collapse: collapse; }
+
+.exp-page th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+
+.exp-page td {
+  padding: 14px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.exp-page tbody tr:hover td { background: rgba(255, 255, 255, 0.03); }
+
+.exp-page td:nth-child(4),
+.exp-page th:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
+.exp-page td:nth-child(4) b { color: var(--amber); }
+
+.exp-page .col-actions { width: 1%; white-space: nowrap; }
+.exp-page .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+.exp-page .empty-state { padding: 40px 14px; color: var(--muted); }
+
+/* ---------- print: keep it clean ---------- */
+@media print {
+  .exp-page .stat-card { border: 1px solid #999; background: #fff; }
+  .exp-page .stat-card h2,
+  .exp-page .stat-card p { color: #000; }
+  .exp-page th, .exp-page td { color: #000; border-color: #999; }
+}

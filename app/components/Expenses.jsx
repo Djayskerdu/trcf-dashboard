@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Printer } from 'lucide-react'
 import Modal from './Modal'
 import Pager from './Pager'
 import { api } from '../lib/api'
+import '../expenses.css'
 import { TABLES, ymd, toFormValue } from '../lib/tables'
 
 const cfg = TABLES.expenses
@@ -171,7 +172,7 @@ export default function Expenses({ expenses, finance, leaders, members, refs, on
   const topMax = byCategory.length ? byCategory[0][1] : 0
 
   return (
-    <div className="finance-wrapper finance-print">
+    <div className="finance-wrapper finance-print exp-page">
       <div className="stats-grid">
         <div className="stat-card blue">
           <div>
