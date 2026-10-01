@@ -168,3 +168,26 @@ body { overscroll-behavior-y: none; }
   .rm-grid > *, .rm-col, .rm-list, .rm-row, .conso-leader, .conso-row { min-width: 0; max-width: 100%; }
   .rm-col-title { padding-inline: 4px; }
 }
+
+/* ==========================================================================
+   SCROLL FIX (phones / Android WebView)
+   `overflow-x: hidden` on html, body, .dashboard and .content turns each of them
+   into its own scroll container, and touch scrolling gets stuck inside one.
+   `clip` hides sideways overflow WITHOUT creating a scroll container.
+   ========================================================================== */
+html, body, .dashboard, .content {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+html { height: auto; }
+body { overscroll-behavior-y: auto; touch-action: pan-y pinch-zoom; }
+
+@media (max-width: 1000px) {
+  /* a nested scroll box under your thumb steals the page scroll - let the page scroll instead */
+  .rm-followup-list { max-height: none; overflow: visible; }
+  .rm-seg-btn { font-size: 15px; padding: 0 8px; }
+  .rm-seg-btn small { padding: 2px 7px; }
+  .pager { flex-direction: column; align-items: stretch; gap: 10px; }
+  .pager-controls { flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+  .pager-btn { min-width: 44px; }
+}
