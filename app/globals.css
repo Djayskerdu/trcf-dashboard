@@ -3724,3 +3724,17 @@ font-size: 14px;
 .streak-dots .dot.on { background: linear-gradient(135deg, #ff9f1c, #ff5d3b); color: #fff; border: none; opacity: 1; }
 .streak-meta { font-size: 13px; margin: 0; opacity: .85; }
 .streak-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- calmer follow-up styling (overrides earlier red styles) ---------- */
+.rm-row.alert { background: transparent; box-shadow: none; }
+.rm-row.alert .rm-name { color: inherit; }
+.rm-row.alert.on { background: rgba(52, 211, 153, .10); }
+.rm-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; opacity: .8; margin-left: auto; }
+.rm-followup { background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .08); box-shadow: none; }
+.rm-followup-head h4 { color: inherit; font-weight: 600; font-size: 14px; opacity: .85; }
+.rm-followup-head > div, .rm-followup-head { align-items: center; }
+.rm-followup-head .rm-chip { margin-left: 6px; }
+.rm-chip.is-on { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .25); color: inherit; }
+.rm-followup-list { max-height: 240px; overflow-y: auto; }
+.rm-followup-item { background: rgba(255, 255, 255, .03); }
+.event-stat-box.red-stat { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .1); }
