@@ -242,6 +242,7 @@ const [selectedEventParticipants,
   const [search, setSearch] = useState('')
   const [attPage, setAttPage] = useState(1)
   const [attPageSize, setAttPageSize] = useState(25)
+  const [attNewestFirst, setAttNewestFirst] = useState(true)
   const [printAll, setPrintAll] = useState(false)
   
 
@@ -904,8 +905,20 @@ const financeChartData = useMemo(() => {
 
         return true
       })
+      // order by attendance date, not by the order rows were added to the sheet,
+      // so a restored backlog (e.g. September added after October) slots in correctly.
+      // Array.sort is stable, so people on the same day keep their sheet order.
+      .sort((a, b) => {
+        const da = formatDate(a[0])
+        const db = formatDate(b[0])
+        if (!da && !db) return 0
+        if (!da) return 1            // undated rows always go last
+        if (!db) return -1
+        if (da === db) return 0
+        return attNewestFirst ? (da < db ? 1 : -1) : (da < db ? -1 : 1)
+      })
 
-  }, [attendance, startDate, endDate, search])
+  }, [attendance, startDate, endDate, search, attNewestFirst])
 
   const attTotalPages = Math.max(
     1,
@@ -1523,7 +1536,13 @@ const financeChartData = useMemo(() => {
         <thead>
 
           <tr>
-            <th>Date</th>
+            <th
+              onClick={() => setAttNewestFirst((v) => !v)}
+              style={{ cursor: 'pointer', userSelect: 'none' }}
+              title="Click to flip the date order"
+            >
+              Date {attNewestFirst ? '↓' : '↑'}
+            </th>
             <th>Full Name</th>
             <th>Type</th>
           </tr>
