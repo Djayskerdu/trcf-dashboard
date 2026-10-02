@@ -37,6 +37,9 @@ import {
   X,
   Phone,
   ChevronRight,
+  Eye,
+  EyeOff,
+  Check,
 } from 'lucide-react'
 
 import LoginScreen from './components/LoginScreen'
@@ -176,6 +179,32 @@ const handleSendFirstTimersBulk = async () => {
       return !p
     })
   }
+  // ---- hide / show sidebar tabs (saved per user, in this browser) ----
+  const PINNED_TABS = ['Homepage'] // always visible
+  const hiddenKey = `hiddenTabs:${session.user.username || session.user.id || session.user.name}`
+  const [hiddenTabs, setHiddenTabs] = useState([])
+  const [editingTabs, setEditingTabs] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(hiddenKey) || '[]')
+      if (Array.isArray(saved)) setHiddenTabs(saved)
+    } catch {}
+  }, [hiddenKey])
+
+  const toggleHiddenTab = (name) => {
+    if (PINNED_TABS.includes(name)) return
+    setHiddenTabs((prev) => {
+      const next = prev.includes(name)
+        ? prev.filter((n) => n !== name)
+        : [...prev, name]
+      try { localStorage.setItem(hiddenKey, JSON.stringify(next)) } catch {}
+      return next
+    })
+    // hiding the page you're on sends you home
+    setActiveTab((cur) => (cur === name ? 'Homepage' : cur))
+  }
+
   const [installPrompt, setInstallPrompt] =
   useState(null)
 
@@ -996,7 +1025,8 @@ const financeChartData = useMemo(() => {
 <div className="menu">
 
   {ALL_TABS.filter((t) =>
-    ROLE_TABS[role].includes(t.name)
+    ROLE_TABS[role].includes(t.name) &&
+    (editingTabs || !hiddenTabs.includes(t.name))
   ).map((tab) => (
 
     <MenuItem
@@ -1004,6 +1034,10 @@ const financeChartData = useMemo(() => {
       icon={tab.icon}
       text={tab.name}
       active={activeTab === tab.name}
+      editing={editingTabs}
+      hidden={hiddenTabs.includes(tab.name)}
+      canHide={!PINNED_TABS.includes(tab.name)}
+      onToggleHide={() => toggleHiddenTab(tab.name)}
       onClick={() => {
 
         setActiveTab(tab.name)
@@ -1029,6 +1063,14 @@ const financeChartData = useMemo(() => {
               <span className={`role-badge ${role}`}>{ROLE_LABEL[role] || role}</span>
             </div>
           </div>
+
+          <button
+            className={`sidebar-link hide-tabs-btn ${editingTabs ? 'on' : ''}`}
+            onClick={() => setEditingTabs((e) => !e)}
+            title={editingTabs ? 'Done hiding tabs' : 'Choose which tabs to hide'}
+          >
+            {editingTabs ? <Check size={16} /> : <EyeOff size={16} />} <span>{editingTabs ? 'Done' : 'Hide tabs'}</span>
+          </button>
 
           <button
             className={`sidebar-link pin-btn ${sidebarPinned ? 'on' : ''}`}
@@ -3666,10 +3708,13 @@ function MenuItem({
   text,
   active,
   onClick,
+  editing = false,
+  hidden = false,
+  canHide = true,
+  onToggleHide,
 }) {
 
-  return (
-
+  const item = (
     <button
       type="button"
       className={`menu-item ${
@@ -3685,6 +3730,26 @@ function MenuItem({
       <span>{text}</span>
 
     </button>
+  )
+
+  if (!editing) return item
+
+  // edit mode: every tab gets an eye toggle
+  return (
+    <div className={`menu-row editing ${hidden ? 'is-hidden' : ''}`}>
+      {item}
+      {canHide && (
+        <button
+          type="button"
+          className="menu-eye"
+          onClick={onToggleHide}
+          aria-label={hidden ? `Show ${text}` : `Hide ${text}`}
+          title={hidden ? `Show ${text}` : `Hide ${text}`}
+        >
+          {hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
+      )}
+    </div>
   )
 }
 

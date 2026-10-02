@@ -137,3 +137,57 @@
 @media (prefers-reduced-motion: reduce) {
   .dashboard, .dashboard > .sidebar, .sidebar * { transition: none !important; }
 }
+
+/* ==========================================================================
+   HIDE TABS (edit mode)
+   ========================================================================== */
+.menu-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.menu-row .menu-item { padding-right: 46px; }
+
+.menu-eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cfe0ff;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.menu-eye:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+
+/* hidden tabs stay visible while editing, but dimmed + struck through */
+.menu-row.is-hidden .menu-item { opacity: 0.4; }
+.menu-row.is-hidden .menu-item span { text-decoration: line-through; }
+.menu-row.is-hidden .menu-eye { color: #8a96bd; }
+
+.sidebar-link.hide-tabs-btn.on {
+  color: #fff;
+  background: rgba(47, 125, 255, 0.18);
+}
+
+/* desktop rail: the eye toggles fade in with the labels */
+@media (min-width: 1001px) {
+  .sidebar .menu-eye {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, background 0.2s ease;
+  }
+  .sidebar:hover .menu-eye,
+  .sidebar:has(:focus-visible) .menu-eye,
+  .dashboard.sidebar-pinned .sidebar .menu-eye {
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0.14s;
+  }
+}
